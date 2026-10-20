@@ -12,6 +12,8 @@
   const FITTINGS=["","End of pipe","Face of fitting","Elbow","Bend","Equal tee","Tee","Coupling","Reducer"];
   const ACCESS=["","Front","Back","Middle"];
   const ITEM_TYPES=["","Union","Close taper nipple","Barrel nipple"];
+  const DRAIN_SIZES=["32 mm / 1 1/4","40 mm / 1 1/2","50 mm / 2","75 mm / 3","82 mm","110 mm / 4","160 mm / 6"];
+  const DRAIN_FITTINGS=["","End of pipe","Socket / coupling","Bend","Branch","Boss","Reducer","Other"];
   // Overall dimensions used to calculate the extra fitted length of an inserted component.
   // Union overall A: Crane female union. Close/barrel nipple lengths: BS EN 10241.
   const UNION_OVERALL={"1/2":49,"3/4":53,"1":58,"1 1/4":64,"1 1/2":68,"2":75,"2 1/2":84,"3":92,"4":107};
@@ -164,5 +166,18 @@
     return {state:"ok",run,mmPerM,ratio,drop,trueLength,note:""};
   }
 
-  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,fittedItems,calculate,drainageFall};
+  function drainageCut(input){
+    input=input||{};
+    const horizontal=measure(input.measureMode||"DIRECT",input.m1,input.m2);
+    if(horizontal===null) return {state:"details",note:"ENTER CENTRE MEASUREMENT"};
+    const f=drainageFall({run:horizontal,mode:input.fallMode||"OFF",customMmPerM:input.customMmPerM});
+    if(f.state!=="ok") return {state:"details",note:f.note};
+    const t1=Number(input.takeoff1||0),t2=Number(input.takeoff2||0);
+    if(!Number.isFinite(t1)||t1<0||!Number.isFinite(t2)||t2<0) return {state:"details",note:"CHECK FITTING TAKE-OFF"};
+    const cut=f.trueLength-t1-t2;
+    if(cut<0) return {state:"invalid",note:"TOO SHORT FOR FITTING TAKE-OFFS"};
+    return {state:"ok",horizontal,trueCentre:f.trueLength,drop:f.drop,mmPerM:f.mmPerM,ratio:f.ratio,cut,takeoff1:t1,takeoff2:t2,note:""};
+  }
+
+  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,DRAIN_SIZES,DRAIN_FITTINGS,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,fittedItems,calculate,drainageFall,drainageCut};
 });
