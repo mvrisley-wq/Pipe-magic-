@@ -76,6 +76,7 @@
     let total=0;
     for(const item of (items||[])){
       if(!item || !item.type) continue;
+      if(item.mm===null||item.mm===undefined||String(item.mm).trim()==="") return {state:"details",total:0,note:"ENTER FITTED mm FOR "+item.type.toUpperCase()};
       const n=Number(item.mm);
       if(!Number.isFinite(n)||n<0) return {state:"details",total:0,note:"ENTER FITTED mm FOR "+item.type.toUpperCase()};
       total+=n;
