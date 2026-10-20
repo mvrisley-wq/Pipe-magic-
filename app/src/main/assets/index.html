@@ -49,7 +49,7 @@ function rowHTML(n){
  '<summary><span class="sumNo">#'+n+'</span><span class="sumSize">—</span><span class="sumCut">—</span></summary>'+
  '<div class="body">'+
  '<div class="top"><label>Mode<select class="mode">'+modeOpts()+'</select></label><label>Size<select class="size">'+sizeOpts()+'</select></label><label class="cutField">CUT<div class="cutBox">—</div></label></div>'+
- '<div class="measure"><div class="directBox"><label>C-C / Direct mm<input class="m1" type="number" inputmode="numeric" min="0" step="1"></label></div>'+
+ '<div class="measure"><div class="directBox"><label>C-C / Direct mm<input class="directMm" type="number" inputmode="numeric" min="0" step="1"></label></div>'+
  '<div class="cxBox hidden"><label>C1-X<input class="cx1" type="number" inputmode="numeric" min="0" step="1"></label><label>C2-X<input class="cx2" type="number" inputmode="numeric" min="0" step="1"></label><label class="derivedField">C-C<div class="derived">—</div></label></div></div>'+
  '<div class="ends">'+endHTML(1)+endHTML(2)+'</div>'+
  '<details class="items"><summary>+ ADD-ONS — union / nipples</summary><div class="itemsBody">'+itemHTML(1)+itemHTML(2)+itemHTML(3)+'<div class="hint">Enter the fitted mm the item actually occupies along the run.</div></div></details>'+
@@ -67,7 +67,7 @@ function endData(row,n){return {fit:row.querySelector('.fit'+n).value,access:row
 function itemsData(row){return [1,2,3].map(n=>({type:row.querySelector('.itemType'+n).value,mm:row.querySelector('.itemMm'+n).value}))}
 function getInput(row){
  const mode=row.querySelector('.mode').value;
- return {mode,m1:mode==='CX'?row.querySelector('.cx1').value:row.querySelector('.m1').value,m2:mode==='CX'?row.querySelector('.cx2').value:'',size:row.querySelector('.size').value,e1:endData(row,1),e2:endData(row,2),items:itemsData(row)};
+ return {mode,m1:mode==='CX'?row.querySelector('.cx1').value:row.querySelector('.directMm').value,m2:mode==='CX'?row.querySelector('.cx2').value:'',size:row.querySelector('.size').value,e1:endData(row,1),e2:endData(row,2),items:itemsData(row)};
 }
 function rowData(row){
  const names=['mode','size','m1','cx1','cx2','fit1','access1','f1','b1','m1','fit2','access2','f2','b2','m2','itemType1','itemMm1','itemType2','itemMm2','itemType3','itemMm3'];
@@ -78,7 +78,7 @@ function rowData(row){
 }
 function saveAll(){
  const data=[...document.querySelectorAll('.pipe-row')].map(row=>({
-  open:row.open,mode:row.querySelector('.mode').value,size:row.querySelector('.size').value,direct:row.querySelector('.m1').value,cx1:row.querySelector('.cx1').value,cx2:row.querySelector('.cx2').value,
+  open:row.open,mode:row.querySelector('.mode').value,size:row.querySelector('.size').value,direct:row.querySelector('.directMm').value,cx1:row.querySelector('.cx1').value,cx2:row.querySelector('.cx2').value,
   fit1:row.querySelector('.fit1').value,access1:row.querySelector('.access1').value,f1:row.querySelector('.f1').value,b1:row.querySelector('.b1').value,m1:row.querySelector('.m1').value,
   fit2:row.querySelector('.fit2').value,access2:row.querySelector('.access2').value,f2:row.querySelector('.f2').value,b2:row.querySelector('.b2').value,m2:row.querySelector('.m2').value,
   itemType1:row.querySelector('.itemType1').value,itemMm1:row.querySelector('.itemMm1').value,itemType2:row.querySelector('.itemType2').value,itemMm2:row.querySelector('.itemMm2').value,itemType3:row.querySelector('.itemType3').value,itemMm3:row.querySelector('.itemMm3').value
@@ -118,7 +118,7 @@ try{
    const d=saved[i];if(!d)return;
    row.open=!!d.open;
    const set=(c,v)=>{const el=row.querySelector('.'+c);if(el)el.value=v||''};
-   set('mode',d.mode||'DIRECT');set('size',d.size);set('m1',d.direct);set('cx1',d.cx1);set('cx2',d.cx2);
+   set('mode',d.mode||'DIRECT');set('size',d.size);set('directMm',d.direct);set('cx1',d.cx1);set('cx2',d.cx2);
    ['fit1','access1','f1','b1','m1','fit2','access2','f2','b2','m2','itemType1','itemMm1','itemType2','itemMm2','itemType3','itemMm3'].forEach(k=>set(k,d[k]));
    calcRow(row);
   });
