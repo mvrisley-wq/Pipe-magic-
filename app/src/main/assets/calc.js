@@ -10,7 +10,22 @@
   const SIZES=Object.keys(THREAD);
   const FITTINGS=["","End of pipe","Face of fitting","Elbow","Equal tee","Tee","Coupling","Reducer"];
   const ACCESS=["","Front","Back","Middle"];
-  const ITEM_TYPES=["","Union","Close taper nipple","Barrel nipple","Running nipple","Reducer + nipple","Custom"];
+  const ITEM_TYPES=["","Union","Close taper nipple","Barrel nipple"];
+  // Overall dimensions used to calculate the extra fitted length of an inserted component.
+  // Union overall A: Crane female union. Close/barrel nipple lengths: BS EN 10241.
+  const UNION_OVERALL={"1/2":49,"3/4":53,"1":58,"1 1/4":64,"1 1/2":68,"2":75,"2 1/2":84,"3":92,"4":107};
+  const CLOSE_OVERALL={"1/2":37,"3/4":39,"1":46,"1 1/4":51,"1 1/2":51,"2":60,"2 1/2":69,"3":75,"4":87};
+  const BARREL_LENGTHS={
+    "1/2":[40,50,60,80,100,120,150,180,200,250,300,350,400,450,500],
+    "3/4":[40,50,60,80,100,120,150,180,200,250,300,350,400,450,500],
+    "1":[50,60,80,100,120,150,180,200,250,300,350,400,450,500],
+    "1 1/4":[50,60,80,100,120,150,180,200,250,300,350,400,450,500],
+    "1 1/2":[50,60,80,100,120,150,180,200,250,300,350,400,450,500],
+    "2":[60,80,100,120,150,180,200,250,300,350,400,450,500],
+    "2 1/2":[80,100,120,150,180,200,250,300,350,400,450,500],
+    "3":[80,100,120,150,180,200,250,300,350,400,450,500],
+    "4":[100,120,150,180,200,250,300,350,400,450,500]
+  };
   const TEES={};
 
   function addTee(f,b,m,fc,bc,mc){
@@ -72,16 +87,32 @@
     return {state:"details",note:"SELECT END FITTING"};
   }
 
-  function fittedItems(items){
+  function itemAllowance(size,item){
+    if(!item || !item.type) return {state:"ok",ded:0};
+    if(!size || !(size in THREAD)) return {state:"details",ded:0,note:"SELECT PIPE SIZE"};
+    const t=THREAD[size];
+    if(item.type==="Union") return {state:"ok",ded:UNION_OVERALL[size]-t,overall:UNION_OVERALL[size]};
+    if(item.type==="Close taper nipple") return {state:"ok",ded:CLOSE_OVERALL[size]-t,overall:CLOSE_OVERALL[size]};
+    if(item.type==="Barrel nipple"){
+      if(item.length===null||item.length===undefined||String(item.length).trim()==="") return {state:"details",ded:0,note:"SELECT BARREL NIPPLE LENGTH"};
+      const n=Number(item.length);
+      if(!(BARREL_LENGTHS[size]||[]).includes(n)) return {state:"details",ded:0,note:"SELECT BARREL NIPPLE LENGTH"};
+      return {state:"ok",ded:n-t,overall:n};
+    }
+    return {state:"details",ded:0,note:"SELECT ADD-ON"};
+  }
+
+  function fittedItems(size,items){
     let total=0;
+    const details=[];
     for(const item of (items||[])){
       if(!item || !item.type) continue;
-      if(item.mm===null||item.mm===undefined||String(item.mm).trim()==="") return {state:"details",total:0,note:"ENTER FITTED mm FOR "+item.type.toUpperCase()};
-      const n=Number(item.mm);
-      if(!Number.isFinite(n)||n<0) return {state:"details",total:0,note:"ENTER FITTED mm FOR "+item.type.toUpperCase()};
-      total+=n;
+      const r=itemAllowance(size,item);
+      if(r.state!=="ok") return {state:"details",total:0,note:r.note,details};
+      total+=r.ded;
+      details.push({type:item.type,ded:r.ded,overall:r.overall});
     }
-    return {state:"ok",total};
+    return {state:"ok",total,details};
   }
 
   function calculate(input){
@@ -98,7 +129,7 @@
     if(a.state!=="ok") return {cut:"",base,note:a.note||"COMPLETE END 1"};
     if(b.state!=="ok") return {cut:"",base,note:b.note||"COMPLETE END 2"};
 
-    const extras=fittedItems(input.items);
+    const extras=fittedItems(input.size,input.items);
     if(extras.state!=="ok") return {cut:"",base,note:extras.note};
 
     const cut=Math.round(base-a.ded-b.ded-extras.total);
@@ -106,5 +137,5 @@
     return {cut,base,extras:extras.total,end1:a.ded,end2:b.ded,note:""};
   }
 
-  return {THREAD,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,TEES,measure,endResult,fittedItems,calculate};
+  return {THREAD,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,fittedItems,calculate};
 });
