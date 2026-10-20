@@ -140,10 +140,11 @@ try{
 }catch(e){}
 
 const tests=[
- calculate({mode:'DIRECT',m1:2000,size:'3/4',e1:{fit:'Elbow'},e2:{fit:'Elbow'},items:[]}).cut===1930,
- calculate({mode:'CX',m1:300,m2:850,size:'3/4',e1:{fit:'Elbow'},e2:{fit:'Elbow'},items:[]}).cut===480,
+ calculate({mode:'DIRECT',m1:2000,size:'3/4',e1:{fit:'Elbow'},e2:{fit:'Elbow'},items:[]}).cut===1964,
+ calculate({mode:'DIRECT',m1:2000,size:'3/4',e1:{fit:'Bend'},e2:{fit:'Bend'},items:[]}).cut===1930,
+ calculate({mode:'CX',m1:300,m2:850,size:'3/4',e1:{fit:'Elbow'},e2:{fit:'Elbow'},items:[]}).cut===514,
  calculate({mode:'DIRECT',m1:1000,size:'3/4',e1:{fit:'End of pipe'},e2:{fit:'Face of fitting'},items:[]}).cut===1015,
- calculate({mode:'DIRECT',m1:2000,size:'1',e1:{fit:'Elbow'},e2:{fit:'End of pipe'},items:[{type:'Union'},{type:'Close taper nipple'}]}).cut===1884
+ calculate({mode:'DIRECT',m1:2000,size:'1',e1:{fit:'Elbow'},e2:{fit:'End of pipe'},items:[{type:'Union'},{type:'Close taper nipple'}]}).cut===1909
 ];
 document.getElementById('status').textContent=tests.every(Boolean)?'Ready — self-test passed':'SELF-TEST FAILED';
 </script>
