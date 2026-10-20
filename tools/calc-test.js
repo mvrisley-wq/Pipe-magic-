@@ -28,4 +28,22 @@ const missing=Calc.calculate({mode:"DIRECT",m1:1000,size:"1",e1:{fit:"End of pip
 assert.ok(missing.note.includes("SELECT BARREL NIPPLE LENGTH"),"Missing barrel length warning");
 console.log("PASS: barrel length selection required");
 
+const f40=Calc.drainageFall({run:4000,mode:"40"});
+eq(f40.mmPerM,25,"1:40 fall per metre");
+eq(f40.drop,100,"1:40 over 4000 mm total drop");
+assert.ok(Math.abs(f40.trueLength-4001.2498047485115)<0.001,"1:40 true run length");
+console.log("PASS: 1:40 true run length =",f40.trueLength);
+
+const f60=Calc.drainageFall({run:6000,mode:"60"});
+assert.ok(Math.abs(f60.mmPerM-(1000/60))<0.0001,"1:60 fall per metre");
+eq(f60.drop,100,"1:60 over 6000 mm total drop");
+
+const custom=Calc.drainageFall({run:4000,mode:"CUSTOM",customMmPerM:20});
+eq(custom.drop,80,"custom 20 mm/m over 4000 mm");
+eq(custom.ratio,50,"custom 20 mm/m equals 1:50");
+
+const off=Calc.drainageFall({run:3200,mode:"OFF"});
+eq(off.drop,0,"fall off drop");
+eq(off.trueLength,3200,"fall off true length");
+
 console.log("ALL PIPE MAGIC TESTS PASSED");
