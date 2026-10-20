@@ -46,4 +46,14 @@ const off=Calc.drainageFall({run:3200,mode:"OFF"});
 eq(off.drop,0,"fall off drop");
 eq(off.trueLength,3200,"fall off true length");
 
+const dc40=Calc.drainageCut({measureMode:"DIRECT",m1:4000,fallMode:"40",takeoff1:50,takeoff2:50});
+assert.equal(dc40.state,"ok","drainage cut state");
+assert.ok(Math.abs(dc40.trueCentre-4001.2498047485115)<0.001,"drainage true centre");
+assert.ok(Math.abs(dc40.cut-3901.2498047485115)<0.001,"drainage fitting deductions");
+
+const dcx=Calc.drainageCut({measureMode:"CX",m1:1000,m2:5000,fallMode:"100",takeoff1:0,takeoff2:75});
+eq(dcx.horizontal,4000,"drainage C-X horizontal C-C");
+eq(dcx.drop,40,"drainage C-X fall drop");
+assert.ok(Math.abs(dcx.cut-3925.19999500025)<0.001,"drainage C-X cut");
+
 console.log("ALL PIPE MAGIC TESTS PASSED");
