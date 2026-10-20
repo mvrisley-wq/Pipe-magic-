@@ -139,5 +139,30 @@
     return {cut,base,extras:extras.total,end1:a.ded,end2:b.ded,note:""};
   }
 
-  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,fittedItems,calculate};
+  function drainageFall(input){
+    input=input||{};
+    const run=Number(input.run);
+    if(!Number.isFinite(run)||run<=0) return {state:"details",note:"ENTER HORIZONTAL RUN"};
+    const mode=String(input.mode||"OFF");
+    let mmPerM=0;
+    let ratio=null;
+    if(mode==="OFF"){
+      return {state:"ok",run,mmPerM:0,ratio:null,drop:0,trueLength:run,note:"FALL OFF — STACK / LEVEL REFERENCE"};
+    }
+    if(mode==="CUSTOM"){
+      mmPerM=Number(input.customMmPerM);
+      if(!Number.isFinite(mmPerM)||mmPerM<=0) return {state:"details",note:"ENTER mm PER METRE"};
+      ratio=1000/mmPerM;
+    }else{
+      const n=Number(mode);
+      if(![40,60,80,100].includes(n)) return {state:"details",note:"SELECT FALL"};
+      ratio=n;
+      mmPerM=1000/n;
+    }
+    const drop=(run/1000)*mmPerM;
+    const trueLength=Math.sqrt(run*run+drop*drop);
+    return {state:"ok",run,mmPerM,ratio,drop,trueLength,note:""};
+  }
+
+  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,fittedItems,calculate,drainageFall};
 });
