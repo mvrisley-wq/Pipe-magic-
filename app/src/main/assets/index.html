@@ -25,20 +25,60 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
 .note{margin-top:7px;min-height:32px;border-radius:7px;background:var(--grey);font-size:11px;font-weight:800;padding:8px}.note.bad{background:var(--danger);color:#8a0000}.note.warn{background:var(--warn);color:#725600}
 .rowActions{display:flex;justify-content:flex-end;margin-top:7px}.clearRow{background:#555;color:#fff;padding:7px 10px;font-size:12px}
 .hint{font-size:10px;color:#666;margin-top:5px}.hidden{display:none}.footer{text-align:center;color:#666;font-size:10px;padding:10px 8px 18px}
-@media(max-width:420px){.title{font-size:18px}.rows{padding:5px}.body{padding:7px}.top{grid-template-columns:1fr 1fr}.top .cutField{grid-column:1/-1}.cxBox{grid-template-columns:1fr 1fr}.cxBox .derivedField{grid-column:1/-1}.ends{grid-template-columns:1fr}.pipe-row>summary{grid-template-columns:36px 1fr 1.1fr}}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:7px;background:#fff;border-bottom:1px solid var(--border)}
+.tab{background:#d9e2f3;color:#17365d;border:1px solid #aab7c7}.tab.active{background:var(--navy);color:#fff}
+.drainPane{padding:8px}.drainCard{background:#fff;border:1px solid var(--border);border-radius:10px;padding:9px}
+.drainGrid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:7px;align-items:end}
+.drainResults{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+.resultBox{background:#eef4f8;border:1px solid #cad5df;border-radius:8px;padding:9px}.resultName{font-size:10px;font-weight:800;color:#666}.resultVal{font-size:20px;font-weight:900;margin-top:3px;color:#17365d}
+.drainNote{margin-top:8px;background:#f7f7f7;border-radius:7px;padding:8px;font-size:11px;font-weight:800}.drainActions{margin-top:8px;display:flex;justify-content:flex-end}.clearDrain{background:#555;color:#fff}
+@media(max-width:420px){.title{font-size:18px}.rows{padding:5px}.body{padding:7px}.top{grid-template-columns:1fr 1fr}.top .cutField{grid-column:1/-1}.cxBox{grid-template-columns:1fr 1fr}.cxBox .derivedField{grid-column:1/-1}.ends{grid-template-columns:1fr}.pipe-row>summary{grid-template-columns:36px 1fr 1.1fr}.drainGrid{grid-template-columns:1fr 1fr}.drainGrid .runField{grid-column:1/-1}.drainResults{grid-template-columns:1fr 1fr}.resultVal{font-size:18px}}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="title">PIPE MAGIC</div>
-  <div class="sub">MALLEABLE PIPE CUT CALCULATOR • ½″ TO 4″</div>
-  <div class="toolbar"><button class="clearAll" id="clearAll">CLEAR ALL</button><span id="status" class="status">Ready</span></div>
-  <div id="rows" class="rows"></div>
-  <div class="footer">Union and close taper are automatic by pipe size. Barrel nipple: choose its standard length. Auto allowances use Crane / BS EN 10241 dimensions.</div>
+  <div class="sub">PIPE CUTS + DRAINAGE FALL</div>
+  <div class="tabs">
+    <button class="tab active" id="tabM" type="button">MALLEABLE</button>
+    <button class="tab" id="tabD" type="button">DRAINAGE</button>
+  </div>
+
+  <section id="malleablePane">
+    <div class="toolbar"><button class="clearAll" id="clearAll">CLEAR ALL</button><span id="status" class="status">Ready</span></div>
+    <div id="rows" class="rows"></div>
+    <div class="footer">Union and close taper are automatic by pipe size. Barrel nipple: choose its standard length.</div>
+  </section>
+
+  <section id="drainagePane" class="drainPane hidden">
+    <div class="drainCard">
+      <div class="drainGrid">
+        <label class="runField">Horizontal C-C / run mm<input id="drainRun" type="number" inputmode="numeric" min="0" step="1" placeholder="e.g. 4000"></label>
+        <label>Fall<select id="drainFall">
+          <option value="OFF">Off / stack</option>
+          <option value="40">1 : 40</option>
+          <option value="60">1 : 60</option>
+          <option value="80">1 : 80</option>
+          <option value="100">1 : 100</option>
+          <option value="CUSTOM">Custom mm/m</option>
+        </select></label>
+        <label id="customFallWrap" class="hidden">Custom mm/m<input id="drainCustom" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 20"></label>
+      </div>
+      <div class="drainResults">
+        <div class="resultBox"><div class="resultName">FALL / METRE</div><div class="resultVal" id="drainMmM">0 mm/m</div></div>
+        <div class="resultBox"><div class="resultName">RATIO</div><div class="resultVal" id="drainRatio">OFF</div></div>
+        <div class="resultBox"><div class="resultName">TOTAL DROP</div><div class="resultVal" id="drainDrop">—</div></div>
+        <div class="resultBox"><div class="resultName">TRUE RUN LENGTH</div><div class="resultVal" id="drainTrue">—</div></div>
+      </div>
+      <div class="drainNote" id="drainNote">Enter the horizontal centre-to-centre run.</div>
+      <div class="drainActions"><button class="clearDrain" id="clearDrain" type="button">CLEAR DRAINAGE</button></div>
+    </div>
+    <div class="footer">Fall can be turned off for stacks. Custom mm/m also shows the equivalent 1 : ratio.</div>
+  </section>
 </div>
 <script src="calc.js"></script>
 <script>
-const {SIZES,FITTINGS,ACCESS,ITEM_TYPES,BARREL_LENGTHS,itemAllowance,calculate}=PipeMagic;
+const {SIZES,FITTINGS,ACCESS,ITEM_TYPES,BARREL_LENGTHS,itemAllowance,calculate,drainageFall}=PipeMagic;
 const esc=s=>String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 const opt=(v,t)=>'<option value="'+esc(v)+'">'+esc(t==null?v:t)+'</option>';
 function opts(arr){return arr.map(v=>opt(v,v||'Select')).join('')}
@@ -62,6 +102,48 @@ function endHTML(n){
 }
 function itemHTML(n){return '<div class="itemRow"><select class="itemType'+n+'">'+opts(ITEM_TYPES)+'</select><div class="itemRight"><select class="itemLen'+n+' hidden"><option value="">Length</option></select><div class="itemTake'+n+' itemTake">—</div></div></div>'}
 const rows=document.getElementById('rows');rows.innerHTML=Array.from({length:50},(_,i)=>rowHTML(i+1)).join('');
+
+const tabM=document.getElementById('tabM'),tabD=document.getElementById('tabD');
+const malleablePane=document.getElementById('malleablePane'),drainagePane=document.getElementById('drainagePane');
+function showPane(which){
+ const d=which==='D';
+ malleablePane.classList.toggle('hidden',d);drainagePane.classList.toggle('hidden',!d);
+ tabM.classList.toggle('active',!d);tabD.classList.toggle('active',d);
+ try{localStorage.setItem('pipeMagicPane',which)}catch(e){}
+}
+tabM.onclick=()=>showPane('M');tabD.onclick=()=>showPane('D');
+
+function fmtDrain(v,dp=1){
+ if(!Number.isFinite(v))return '—';
+ const p=Math.pow(10,dp),n=Math.round(v*p)/p;
+ return Number.isInteger(n)?String(n):n.toFixed(dp).replace(/0+$/,'').replace(/\.$/,'');
+}
+const drainRun=document.getElementById('drainRun'),drainFall=document.getElementById('drainFall'),drainCustom=document.getElementById('drainCustom');
+const customFallWrap=document.getElementById('customFallWrap'),drainMmM=document.getElementById('drainMmM'),drainRatio=document.getElementById('drainRatio'),drainDrop=document.getElementById('drainDrop'),drainTrue=document.getElementById('drainTrue'),drainNote=document.getElementById('drainNote');
+function saveDrain(){
+ try{localStorage.setItem('pipeMagicDrainage',JSON.stringify({run:drainRun.value,fall:drainFall.value,custom:drainCustom.value}))}catch(e){}
+}
+function calcDrain(){
+ customFallWrap.classList.toggle('hidden',drainFall.value!=='CUSTOM');
+ const r=drainageFall({run:drainRun.value,mode:drainFall.value,customMmPerM:drainCustom.value});
+ if(r.state!=='ok'){
+  drainMmM.textContent='—';drainRatio.textContent='—';drainDrop.textContent='—';drainTrue.textContent='—';drainNote.textContent=r.note;saveDrain();return;
+ }
+ drainMmM.textContent=fmtDrain(r.mmPerM,1)+' mm/m';
+ drainRatio.textContent=r.ratio===null?'OFF':'1 : '+fmtDrain(r.ratio,1);
+ drainDrop.textContent=fmtDrain(r.drop,1)+' mm';
+ drainTrue.textContent=fmtDrain(r.trueLength,1)+' mm';
+ drainNote.textContent=r.note||('Drop '+fmtDrain(r.drop,1)+' mm over '+fmtDrain(r.run,0)+' mm horizontal.');
+ saveDrain();
+}
+[drainRun,drainCustom].forEach(el=>el.addEventListener('input',calcDrain));drainFall.addEventListener('change',calcDrain);
+document.getElementById('clearDrain').onclick=()=>{drainRun.value='';drainFall.value='OFF';drainCustom.value='';localStorage.removeItem('pipeMagicDrainage');calcDrain()};
+try{
+ const d=JSON.parse(localStorage.getItem('pipeMagicDrainage')||'null');
+ if(d){drainRun.value=d.run||'';drainFall.value=d.fall||'OFF';drainCustom.value=d.custom||'';}
+ showPane(localStorage.getItem('pipeMagicPane')==='D'?'D':'M');
+}catch(e){showPane('M')}
+calcDrain();
 
 function endData(row,n){return {fit:row.querySelector('.fit'+n).value,access:row.querySelector('.access'+n).value,F:row.querySelector('.f'+n).value,B:row.querySelector('.b'+n).value,M:row.querySelector('.m'+n).value}}
 function itemsData(row){return [1,2,3].map(n=>({type:row.querySelector('.itemType'+n).value,length:row.querySelector('.itemLen'+n).value}))}
@@ -144,7 +226,9 @@ const tests=[
  calculate({mode:'DIRECT',m1:2000,size:'3/4',e1:{fit:'Bend'},e2:{fit:'Bend'},items:[]}).cut===1930,
  calculate({mode:'CX',m1:300,m2:850,size:'3/4',e1:{fit:'Elbow'},e2:{fit:'Elbow'},items:[]}).cut===514,
  calculate({mode:'DIRECT',m1:1000,size:'3/4',e1:{fit:'End of pipe'},e2:{fit:'Face of fitting'},items:[]}).cut===1015,
- calculate({mode:'DIRECT',m1:2000,size:'1',e1:{fit:'Elbow'},e2:{fit:'End of pipe'},items:[{type:'Union'},{type:'Close taper nipple'}]}).cut===1909
+ calculate({mode:'DIRECT',m1:2000,size:'1',e1:{fit:'Elbow'},e2:{fit:'End of pipe'},items:[{type:'Union'},{type:'Close taper nipple'}]}).cut===1909,
+ drainageFall({run:4000,mode:'40'}).drop===100,
+ Math.abs(drainageFall({run:4000,mode:'CUSTOM',customMmPerM:20}).ratio-50)<0.0001
 ];
 document.getElementById('status').textContent=tests.every(Boolean)?'Ready — self-test passed':'SELF-TEST FAILED';
 </script>
