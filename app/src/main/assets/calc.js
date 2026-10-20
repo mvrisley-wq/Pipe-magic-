@@ -4,11 +4,12 @@
   root.PipeMagic=api;
 })(typeof globalThis!=="undefined"?globalThis:this,function(){
   const THREAD={"1/2":13,"3/4":15,"1":17,"1 1/4":19,"1 1/2":19,"2":24,"2 1/2":27,"3":30,"4":36};
+  const ELBOW={"1/2":28,"3/4":33,"1":38,"1 1/4":45,"1 1/2":50,"2":58,"2 1/2":69,"3":78,"4":96};
   const BEND={"1/2":45,"3/4":50,"1":63,"1 1/4":76,"1 1/2":85,"2":102,"2 1/2":114,"3":127,"4":165};
   const SOCKET={"1/2":34,"3/4":39,"1":42,"1 1/4":49,"1 1/2":54,"2":64,"2 1/2":73,"3":81,"4":94};
   const EQTEE={"1/2":28,"3/4":33,"1":38,"1 1/4":45,"1 1/2":50,"2":58,"2 1/2":69,"3":78,"4":96};
   const SIZES=Object.keys(THREAD);
-  const FITTINGS=["","End of pipe","Face of fitting","Elbow","Equal tee","Tee","Coupling","Reducer"];
+  const FITTINGS=["","End of pipe","Face of fitting","Elbow","Bend","Equal tee","Tee","Coupling","Reducer"];
   const ACCESS=["","Front","Back","Middle"];
   const ITEM_TYPES=["","Union","Close taper nipple","Barrel nipple"];
   // Overall dimensions used to calculate the extra fitted length of an inserted component.
@@ -73,7 +74,8 @@
     if(!size || !(size in THREAD)) return {state:"details",note:"SELECT PIPE SIZE"};
     if(e.fit==="Face of fitting") return {state:"ok",ded:-THREAD[size]};
     if(e.fit==="Reducer") return {state:"assembly",note:"REDUCER — ENTER ITS FITTED LENGTH AS AN ADD-ON"};
-    if(e.fit==="Elbow") return {state:"ok",ded:BEND[size]-THREAD[size]};
+    if(e.fit==="Elbow") return {state:"ok",ded:ELBOW[size]-THREAD[size]};
+    if(e.fit==="Bend") return {state:"ok",ded:BEND[size]-THREAD[size]};
     if(e.fit==="Equal tee") return {state:"ok",ded:EQTEE[size]-THREAD[size]};
     if(e.fit==="Coupling") return {state:"ok",ded:SOCKET[size]/2-THREAD[size]};
     if(e.fit==="Tee"){
@@ -137,5 +139,5 @@
     return {cut,base,extras:extras.total,end1:a.ded,end2:b.ded,note:""};
   }
 
-  return {THREAD,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,fittedItems,calculate};
+  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,fittedItems,calculate};
 });
