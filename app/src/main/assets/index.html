@@ -102,7 +102,7 @@ function drainSizeOpts(){return '<option value="">Size</option>'+DRAIN_SIZES.map
 function drainFitOpts(){return '<option value="">Fitting</option>'+DRAIN_FITTINGS.filter(Boolean).map(v=>opt(v,v)).join('')}
 function drainFallOpts(){return '<option value="OFF">Off / stack</option><option value="40">1 : 40</option><option value="60">1 : 60</option><option value="80">1 : 80</option><option value="100">1 : 100</option><option value="CUSTOM">Custom mm/m</option>'}
 function drainEndHTML(n){
- return '<div class="drainEnd '+(n===1?'one':'two')+'"><div class="endTitle">END '+n+'</div><div class="drainEndGrid"><label>Fitting<select class="dfit'+n+'">'+drainFitOpts()+'</select></label><label>Take-off mm<input class="dtake'+n+'" type="number" inputmode="decimal" min="0" step="0.1" placeholder="0"></label></div></div>';
+ return '<div class="drainEnd '+(n===1?'one':'two')+'"><div class="endTitle">'+(n===1?'UPSTREAM':'DOWNSTREAM')+'</div><div class="drainEndGrid"><label>Fitting<select class="dfit'+n+'">'+drainFitOpts()+'</select></label><label>Take-off mm<input class="dtake'+n+'" type="number" inputmode="decimal" min="0" step="0.1" placeholder="0"></label></div></div>';
 }
 function drainRowHTML(n){
  return '<details class="drain-row pipe-row" data-drow="'+n+'" '+(n===1?'open':'')+'>'+
@@ -163,7 +163,7 @@ function calcDrainRow(row){
  row.querySelector('.ddrop').textContent=fmtDrain(r.drop,1)+' mm';
  row.querySelector('.dtrue').textContent=fmtDrain(r.trueCentre,1)+' mm';
  row.querySelector('.dratio').textContent=r.ratio===null?'OFF':'1:'+fmtDrain(r.ratio,1);
- note.textContent='Horizontal C-C '+fmtDrain(r.horizontal,1)+' mm → true sloping C-C '+fmtDrain(r.trueCentre,1)+' mm, less fitting take-offs.';
+ note.textContent='UPSTREAM → DOWNSTREAM: horizontal C-C '+fmtDrain(r.horizontal,1)+' mm → true sloping C-C '+fmtDrain(r.trueCentre,1)+' mm, less fitting take-offs.';
  saveDrainRows();
 }
 function clearDrainRow(row){
