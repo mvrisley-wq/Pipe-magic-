@@ -12,7 +12,7 @@
   const FITTINGS=["","End of pipe","Face of fitting","Elbow","Bend","Equal tee","Tee","Coupling","Reducer"];
   const ACCESS=["","Front","Back","Middle"];
   const ITEM_TYPES=["","Union","Close taper nipple","Barrel nipple"];
-  const DRAIN_SIZES=["32 mm / 1 1/4","40 mm / 1 1/2","50 mm / 2","75 mm / 3","82 mm","110 mm / 4","160 mm / 6"];
+  const DRAIN_SIZES=["1 1/4 in / 32 mm","1 1/2 in / 40 mm","2 in / 50 mm","3 in / 75 mm","3 in / 82 mm","4 in / 110 mm","6 in / 160 mm"];
   const DRAIN_FITTINGS=["","End of pipe","Socket / coupling","Bend","Branch","Boss","Reducer","Other"];
   // Overall dimensions used to calculate the extra fitted length of an inserted component.
   // Union overall A: Crane female union. Close/barrel nipple lengths: BS EN 10241.
