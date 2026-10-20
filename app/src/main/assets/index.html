@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pipe Magic</title>
+<style>
+:root{--navy:#17365d;--blue:#ddebf7;--orange:#fce4d6;--green:#e2f0d9;--grey:#f2f2f2;--border:#c7c7c7;--danger:#f4cccc;--warn:#fff2cc}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#eef1f4;color:#202124}
+.app{max-width:760px;margin:auto}.title{background:var(--navy);color:#fff;text-align:center;font-weight:900;font-size:20px;padding:11px}
+.sub{background:#d9e2f3;text-align:center;font-size:12px;font-weight:800;padding:7px}
+.toolbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--border);padding:7px;display:flex;align-items:center;gap:8px}
+button{border:0;border-radius:8px;font-weight:900;padding:9px 11px}.clearAll{background:#a90000;color:#fff}.status{font-size:11px;color:#555;line-height:1.2}
+.rows{padding:7px;display:flex;flex-direction:column;gap:7px}.pipe-row{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.pipe-row>summary{list-style:none;display:grid;grid-template-columns:42px 1fr 1fr;gap:7px;align-items:center;padding:10px;font-weight:800;cursor:pointer;background:#fafafa}.pipe-row>summary::-webkit-details-marker{display:none}
+.sumNo{font-size:18px}.sumSize{font-size:13px;color:#555}.sumCut{text-align:right;font-size:18px;color:#1d5d1d}
+.body{padding:8px}.top{display:grid;grid-template-columns:1fr 1fr 1.15fr;gap:6px;align-items:end}
+label{display:flex;flex-direction:column;gap:3px;font-size:10px;font-weight:800;color:#555}
+input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;background:#fff;padding:6px;font-size:16px}
+.cutBox{min-height:39px;border-radius:7px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900}
+.measure{margin-top:7px;background:#f8f8f8;border-radius:8px;padding:7px}.directBox{display:grid;grid-template-columns:1fr;gap:6px}.cxBox{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}.derived{min-height:39px;border-radius:7px;background:#e7eef8;display:flex;align-items:center;justify-content:center;font-weight:900}
+.ends{margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:7px}.end{border-radius:8px;padding:7px}.end.one{background:var(--blue)}.end.two{background:var(--orange)}.endTitle{font-size:11px;font-weight:900;margin-bottom:5px}
+.endGrid{display:grid;grid-template-columns:1fr;gap:5px}.teeFields{margin-top:5px;display:grid;grid-template-columns:1fr 1fr;gap:5px}.teeFields .wide{grid-column:1/-1}
+.items{margin-top:7px;border:1px solid var(--border);border-radius:8px;background:#fff}.items>summary{padding:8px;font-size:11px;font-weight:900;cursor:pointer}.itemsBody{padding:0 7px 7px}.itemRow{display:grid;grid-template-columns:1fr 95px;gap:6px;margin-top:5px}
+.note{margin-top:7px;min-height:32px;border-radius:7px;background:var(--grey);font-size:11px;font-weight:800;padding:8px}.note.bad{background:var(--danger);color:#8a0000}.note.warn{background:var(--warn);color:#725600}
+.rowActions{display:flex;justify-content:flex-end;margin-top:7px}.clearRow{background:#555;color:#fff;padding:7px 10px;font-size:12px}
+.hint{font-size:10px;color:#666;margin-top:5px}.hidden{display:none}.footer{text-align:center;color:#666;font-size:10px;padding:10px 8px 18px}
+@media(max-width:420px){.title{font-size:18px}.rows{padding:5px}.body{padding:7px}.top{grid-template-columns:1fr 1fr}.top .cutField{grid-column:1/-1}.cxBox{grid-template-columns:1fr 1fr}.cxBox .derivedField{grid-column:1/-1}.ends{grid-template-columns:1fr}.pipe-row>summary{grid-template-columns:36px 1fr 1.1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="title">PIPE MAGIC</div>
+  <div class="sub">MALLEABLE PIPE CUT CALCULATOR • ½″ TO 4″</div>
+  <div class="toolbar"><button class="clearAll" id="clearAll">CLEAR ALL</button><span id="status" class="status">Ready</span></div>
+  <div id="rows" class="rows"></div>
+  <div class="footer">Face of fitting adds the thread-in depth. Add-ons use the actual fitted length they occupy in the run.</div>
+</div>
+<script src="calc.js"></script>
+<script>
+const {SIZES,FITTINGS,ACCESS,ITEM_TYPES,calculate}=PipeMagic;
+const esc=s=>String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+const opt=(v,t)=>'<option value="'+esc(v)+'">'+esc(t==null?v:t)+'</option>';
+function opts(arr){return arr.map(v=>opt(v,v||'Select')).join('')}
+function sizeOpts(){return '<option value="">Size</option>'+SIZES.map(v=>opt(v,v+'″')).join('')}
+function modeOpts(){return '<option value="DIRECT">C-C / Direct</option><option value="CX">Centre to X</option>'}
+function rowHTML(n){
+ return '<details class="pipe-row" data-row="'+n+'" '+(n===1?'open':'')+'>'+
+ '<summary><span class="sumNo">#'+n+'</span><span class="sumSize">—</span><span class="sumCut">—</span></summary>'+
+ '<div class="body">'+
+ '<div class="top"><label>Mode<select class="mode">'+modeOpts()+'</select></label><label>Size<select class="size">'+sizeOpts()+'</select></label><label class="cutField">CUT<div class="cutBox">—</div></label></div>'+
+ '<div class="measure"><div class="directBox"><label>C-C / Direct mm<input class="m1" type="number" inputmode="numeric" min="0" step="1"></label></div>'+
+ '<div class="cxBox hidden"><label>C1-X<input class="cx1" type="number" inputmode="numeric" min="0" step="1"></label><label>C2-X<input class="cx2" type="number" inputmode="numeric" min="0" step="1"></label><label class="derivedField">C-C<div class="derived">—</div></label></div></div>'+
+ '<div class="ends">'+endHTML(1)+endHTML(2)+'</div>'+
+ '<details class="items"><summary>+ ADD-ONS — union / nipples</summary><div class="itemsBody">'+itemHTML(1)+itemHTML(2)+itemHTML(3)+'<div class="hint">Enter the fitted mm the item actually occupies along the run.</div></div></details>'+
+ '<div class="note"></div><div class="rowActions"><button class="clearRow" type="button">CLR ROW</button></div>'+
+ '</div></details>';
+}
+function endHTML(n){
+ return '<div class="end '+(n===1?'one':'two')+'"><div class="endTitle">END '+n+'</div><div class="endGrid"><label>Fitting<select class="fit'+n+'">'+opts(FITTINGS)+'</select></label></div>'+
+ '<div class="teeFields tee'+n+' hidden"><label class="wide">Tee leg<select class="access'+n+'">'+opts(ACCESS)+'</select></label><label>F<select class="f'+n+'">'+sizeOpts()+'</select></label><label>B<select class="b'+n+'">'+sizeOpts()+'</select></label><label>M<select class="m'+n+'">'+sizeOpts()+'</select></label></div></div>';
+}
+function itemHTML(n){return '<div class="itemRow"><select class="itemType'+n+'">'+opts(ITEM_TYPES)+'</select><input class="itemMm'+n+'" type="number" inputmode="numeric" min="0" step="1" placeholder="fitted mm"></div>'}
+const rows=document.getElementById('rows');rows.innerHTML=Array.from({length:50},(_,i)=>rowHTML(i+1)).join('');
+
+function endData(row,n){return {fit:row.querySelector('.fit'+n).value,access:row.querySelector('.access'+n).value,F:row.querySelector('.f'+n).value,B:row.querySelector('.b'+n).value,M:row.querySelector('.m'+n).value}}
+function itemsData(row){return [1,2,3].map(n=>({type:row.querySelector('.itemType'+n).value,mm:row.querySelector('.itemMm'+n).value}))}
+function getInput(row){
+ const mode=row.querySelector('.mode').value;
+ return {mode,m1:mode==='CX'?row.querySelector('.cx1').value:row.querySelector('.m1').value,m2:mode==='CX'?row.querySelector('.cx2').value:'',size:row.querySelector('.size').value,e1:endData(row,1),e2:endData(row,2),items:itemsData(row)};
+}
+function rowData(row){
+ const names=['mode','size','m1','cx1','cx2','fit1','access1','f1','b1','m1','fit2','access2','f2','b2','m2','itemType1','itemMm1','itemType2','itemMm2','itemType3','itemMm3'];
+ const out={};
+ names.forEach((n,i)=>{const all=row.querySelectorAll('.'+n); if(all.length) out[n+(all.length>1?'_'+i:'')]=all[0].value});
+ out.direct=row.querySelector('.m1').value;out.cx1=row.querySelector('.cx1').value;out.cx2=row.querySelector('.cx2').value;
+ return out;
+}
+function saveAll(){
+ const data=[...document.querySelectorAll('.pipe-row')].map(row=>({
+  open:row.open,mode:row.querySelector('.mode').value,size:row.querySelector('.size').value,direct:row.querySelector('.m1').value,cx1:row.querySelector('.cx1').value,cx2:row.querySelector('.cx2').value,
+  fit1:row.querySelector('.fit1').value,access1:row.querySelector('.access1').value,f1:row.querySelector('.f1').value,b1:row.querySelector('.b1').value,m1:row.querySelector('.m1').value,
+  fit2:row.querySelector('.fit2').value,access2:row.querySelector('.access2').value,f2:row.querySelector('.f2').value,b2:row.querySelector('.b2').value,m2:row.querySelector('.m2').value,
+  itemType1:row.querySelector('.itemType1').value,itemMm1:row.querySelector('.itemMm1').value,itemType2:row.querySelector('.itemType2').value,itemMm2:row.querySelector('.itemMm2').value,itemType3:row.querySelector('.itemType3').value,itemMm3:row.querySelector('.itemMm3').value
+ }));
+ try{localStorage.setItem('pipeMagic50',JSON.stringify(data))}catch(e){}
+}
+function calcRow(row){
+ const mode=row.querySelector('.mode').value;
+ row.querySelector('.directBox').classList.toggle('hidden',mode==='CX');
+ row.querySelector('.cxBox').classList.toggle('hidden',mode!=='CX');
+ [1,2].forEach(n=>row.querySelector('.tee'+n).classList.toggle('hidden',row.querySelector('.fit'+n).value!=='Tee'));
+ const r=calculate(getInput(row));
+ row.querySelector('.cutBox').textContent=r.cut===''?'—':r.cut+' mm';
+ row.querySelector('.sumCut').textContent=r.cut===''?'—':r.cut+' mm';
+ const s=row.querySelector('.size').value;row.querySelector('.sumSize').textContent=s?s+'″':'—';
+ row.querySelector('.derived').textContent=(mode==='CX'&&r.base!=='')?r.base+' mm':'—';
+ const note=row.querySelector('.note');note.textContent=r.note;note.className='note';
+ if(r.note.includes('TOO SHORT')||r.note.includes('NOT LISTED')||r.note.includes('MUST MATCH'))note.classList.add('bad');
+ else if(r.note)note.classList.add('warn');
+ saveAll();
+}
+function clearRow(row){
+ if(!confirm('Clear row '+row.dataset.row+'?'))return;
+ row.querySelectorAll('input').forEach(el=>el.value='');
+ row.querySelectorAll('select').forEach(el=>el.selectedIndex=0);
+ row.querySelector('.mode').value='DIRECT';calcRow(row);
+}
+rows.addEventListener('input',e=>{const row=e.target.closest('.pipe-row');if(row)calcRow(row)});
+rows.addEventListener('change',e=>{const row=e.target.closest('.pipe-row');if(row)calcRow(row)});
+rows.addEventListener('click',e=>{if(e.target.classList.contains('clearRow'))clearRow(e.target.closest('.pipe-row'))});
+document.getElementById('clearAll').onclick=()=>{if(!confirm('Clear ALL 50 rows?'))return;localStorage.removeItem('pipeMagic50');location.reload()};
+
+try{
+ const saved=JSON.parse(localStorage.getItem('pipeMagic50')||'null');
+ if(Array.isArray(saved)){
+  [...document.querySelectorAll('.pipe-row')].forEach((row,i)=>{
+   const d=saved[i];if(!d)return;
+   row.open=!!d.open;
+   const set=(c,v)=>{const el=row.querySelector('.'+c);if(el)el.value=v||''};
+   set('mode',d.mode||'DIRECT');set('size',d.size);set('m1',d.direct);set('cx1',d.cx1);set('cx2',d.cx2);
+   ['fit1','access1','f1','b1','m1','fit2','access2','f2','b2','m2','itemType1','itemMm1','itemType2','itemMm2','itemType3','itemMm3'].forEach(k=>set(k,d[k]));
+   calcRow(row);
+  });
+ }
+}catch(e){}
+
+const tests=[
+ calculate({mode:'DIRECT',m1:2000,size:'3/4',e1:{fit:'Elbow'},e2:{fit:'Elbow'},items:[]}).cut===1930,
+ calculate({mode:'CX',m1:300,m2:850,size:'3/4',e1:{fit:'Elbow'},e2:{fit:'Elbow'},items:[]}).cut===480,
+ calculate({mode:'DIRECT',m1:1000,size:'3/4',e1:{fit:'End of pipe'},e2:{fit:'Face of fitting'},items:[]}).cut===1015,
+ calculate({mode:'DIRECT',m1:2000,size:'1',e1:{fit:'Elbow'},e2:{fit:'End of pipe'},items:[{type:'Union',mm:60},{type:'Close taper nipple',mm:20}]}).cut===1874
+];
+document.getElementById('status').textContent=tests.every(Boolean)?'Ready — self-test passed':'SELF-TEST FAILED';
+</script>
+</body>
+</html>
