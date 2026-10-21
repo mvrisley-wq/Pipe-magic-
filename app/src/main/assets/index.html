@@ -53,12 +53,12 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
   <section id="drainagePane" class="hidden">
     <div class="toolbar"><button class="clearAll" id="clearAllDrain">CLEAR ALL</button><span id="drainStatus" class="status">Drainage centres + fall</span></div>
     <div id="drainRows" class="rows"></div>
-    <div class="footer">Drainage cuts are centre-to-centre like the malleable side. End-of-pipe = 0 take-off; other fitting take-offs stay editable until manufacturer tables are loaded.</div>
+    <div class="footer">Terrain solvent-weld only: 200 Waste (32/40/50 mm) and 100 Soil (82/110/160 mm). No push-fit.</div>
   </section>
 </div>
 <script src="calc.js"></script>
 <script>
-const {SIZES,FITTINGS,ACCESS,ITEM_TYPES,BARREL_LENGTHS,DRAIN_SIZES,DRAIN_FITTINGS,itemAllowance,calculate,drainageFall,drainageCut}=PipeMagic;
+const {SIZES,FITTINGS,ACCESS,ITEM_TYPES,BARREL_LENGTHS,DRAIN_BRANDS,DRAIN_SYSTEMS,DRAIN_SIZE_BY_SYSTEM,DRAIN_SIZES,DRAIN_FITTINGS,itemAllowance,calculate,drainageFall,drainageCut}=PipeMagic;
 const esc=s=>String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 const opt=(v,t)=>'<option value="'+esc(v)+'">'+esc(t==null?v:t)+'</option>';
 function opts(arr){return arr.map(v=>opt(v,v||'Select')).join('')}
@@ -98,7 +98,9 @@ function fmtDrain(v,dp=1){
  const p=Math.pow(10,dp),n=Math.round(v*p)/p;
  return Number.isInteger(n)?String(n):n.toFixed(dp).replace(/0+$/,'').replace(/\.$/,'');
 }
-function drainSizeOpts(){return '<option value="">Size</option>'+DRAIN_SIZES.map(v=>opt(v,v)).join('')}
+function drainBrandOpts(){return DRAIN_BRANDS.map(v=>opt(v,v)).join('')}
+function drainSystemOpts(){return '<option value="">System</option>'+DRAIN_SYSTEMS.map(v=>opt(v,v)).join('')}
+function drainSizeOpts(system){return '<option value="">Size</option>'+((DRAIN_SIZE_BY_SYSTEM[system]||[]).map(v=>opt(v,v)).join(''))}
 function drainFitOpts(){return '<option value="">Fitting</option>'+DRAIN_FITTINGS.filter(Boolean).map(v=>opt(v,v)).join('')}
 function drainFallOpts(){return '<option value="OFF">Off / stack</option><option value="40">1 : 40</option><option value="60">1 : 60</option><option value="80">1 : 80</option><option value="100">1 : 100</option><option value="CUSTOM">Custom mm/m</option>'}
 function drainEndHTML(n){
@@ -108,7 +110,8 @@ function drainRowHTML(n){
  return '<details class="drain-row pipe-row" data-drow="'+n+'" '+(n===1?'open':'')+'>'+
  '<summary><span class="sumNo">#'+n+'</span><span class="sumSize">—</span><span class="sumCut">—</span></summary>'+
  '<div class="body">'+
- '<div class="top"><label>Mode<select class="dmode">'+modeOpts()+'</select></label><label>Size<select class="dsize">'+drainSizeOpts()+'</select></label><label class="cutField">CUT<div class="cutBox dcut">—</div></label></div>'+
+ '<div class="drainFallGrid"><label>Brand<select class="dbrand">'+drainBrandOpts()+'</select></label><label>System<select class="dsystem">'+drainSystemOpts()+'</select></label></div>'+
+ '<div class="top"><label>Mode<select class="dmode">'+modeOpts()+'</select></label><label>Size<select class="dsize">'+drainSizeOpts('')+'</select></label><label class="cutField">CUT<div class="cutBox dcut">—</div></label></div>'+
  '<div class="measure"><div class="directBox ddirectBox"><label>Horizontal C-C mm<input class="ddirect" type="number" inputmode="numeric" min="0" step="1"></label></div>'+
  '<div class="cxBox dcxBox hidden"><label>C1-X<input class="dcx1" type="number" inputmode="numeric" min="0" step="1"></label><label>C2-X<input class="dcx2" type="number" inputmode="numeric" min="0" step="1"></label><label class="derivedField">Horizontal C-C<div class="derived dderived">—</div></label></div></div>'+
  '<div class="drainFallGrid"><label>Fall<select class="dfall">'+drainFallOpts()+'</select></label><label class="dcustomWrap hidden">Custom mm/m<input class="dcustom" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 20"></label></div>'+
@@ -129,7 +132,7 @@ function drainInput(row){
 }
 function saveDrainRows(){
  const data=[...document.querySelectorAll('.drain-row')].map(row=>({
-  open:row.open,mode:row.querySelector('.dmode').value,size:row.querySelector('.dsize').value,direct:row.querySelector('.ddirect').value,cx1:row.querySelector('.dcx1').value,cx2:row.querySelector('.dcx2').value,
+  open:row.open,brand:row.querySelector('.dbrand').value,system:row.querySelector('.dsystem').value,mode:row.querySelector('.dmode').value,size:row.querySelector('.dsize').value,direct:row.querySelector('.ddirect').value,cx1:row.querySelector('.dcx1').value,cx2:row.querySelector('.dcx2').value,
   fall:row.querySelector('.dfall').value,custom:row.querySelector('.dcustom').value,fit1:row.querySelector('.dfit1').value,take1:row.querySelector('.dtake1').value,fit2:row.querySelector('.dfit2').value,take2:row.querySelector('.dtake2').value
  }));
  try{localStorage.setItem('pipeMagicDrainRows',JSON.stringify(data))}catch(e){}
@@ -143,10 +146,12 @@ function calcDrainRow(row){
   const fit=row.querySelector('.dfit'+n).value,take=row.querySelector('.dtake'+n);
   if(fit==='End of pipe'){take.value='0';take.disabled=true}else take.disabled=false;
  });
+ const system=row.querySelector('.dsystem').value;
  const size=row.querySelector('.dsize').value;
  row.querySelector('.sumSize').textContent=size||'—';
  const note=row.querySelector('.dnote');
  const f1=row.querySelector('.dfit1').value,f2=row.querySelector('.dfit2').value;
+ if(!system){row.querySelector('.dcut').textContent='—';row.querySelector('.sumCut').textContent='—';note.textContent='SELECT TERRAIN SOLVENT SYSTEM';saveDrainRows();return}
  if(!size){row.querySelector('.dcut').textContent='—';row.querySelector('.sumCut').textContent='—';note.textContent='SELECT PIPE SIZE';saveDrainRows();return}
  if(!f1||!f2){row.querySelector('.dcut').textContent='—';row.querySelector('.sumCut').textContent='—';note.textContent='SELECT END FITTINGS';saveDrainRows();return}
  if((f1!=='End of pipe'&&row.querySelector('.dtake1').value==='')||(f2!=='End of pipe'&&row.querySelector('.dtake2').value==='')){
@@ -173,7 +178,14 @@ function clearDrainRow(row){
  row.querySelector('.dmode').value='DIRECT';row.querySelector('.dfall').value='OFF';calcDrainRow(row);
 }
 drainRows.addEventListener('input',e=>{const row=e.target.closest('.drain-row');if(row)calcDrainRow(row)});
-drainRows.addEventListener('change',e=>{const row=e.target.closest('.drain-row');if(row)calcDrainRow(row)});
+drainRows.addEventListener('change',e=>{const row=e.target.closest('.drain-row');if(!row)return;
+ if(e.target.classList.contains('dsystem')){
+   const sizeSel=row.querySelector('.dsize'); const old=sizeSel.value;
+   sizeSel.innerHTML=drainSizeOpts(e.target.value);
+   if([...sizeSel.options].some(o=>o.value===old)) sizeSel.value=old;
+ }
+ calcDrainRow(row)
+});
 drainRows.addEventListener('click',e=>{if(e.target.classList.contains('clearDrainRow'))clearDrainRow(e.target.closest('.drain-row'))});
 document.getElementById('clearAllDrain').onclick=()=>{if(!confirm('Clear ALL drainage rows?'))return;localStorage.removeItem('pipeMagicDrainRows');[...document.querySelectorAll('.drain-row')].forEach(row=>{row.querySelectorAll('input').forEach(el=>{el.value='';el.disabled=false});row.querySelectorAll('select').forEach(el=>el.selectedIndex=0);row.querySelector('.dmode').value='DIRECT';row.querySelector('.dfall').value='OFF';calcDrainRow(row)})};
 try{
@@ -182,6 +194,8 @@ try{
   [...document.querySelectorAll('.drain-row')].forEach((row,i)=>{
    const d=saved[i];if(!d)return;row.open=!!d.open;
    const set=(c,v)=>{const el=row.querySelector('.'+c);if(el)el.value=v||''};
+   set('dbrand',d.brand||'Terrain');set('dsystem',d.system||'');
+   const sizeSel=row.querySelector('.dsize');sizeSel.innerHTML=drainSizeOpts(row.querySelector('.dsystem').value);
    set('dmode',d.mode||'DIRECT');set('dsize',d.size);set('ddirect',d.direct);set('dcx1',d.cx1);set('dcx2',d.cx2);set('dfall',d.fall||'OFF');set('dcustom',d.custom);set('dfit1',d.fit1);set('dtake1',d.take1);set('dfit2',d.fit2);set('dtake2',d.take2);calcDrainRow(row);
   });
  }
@@ -195,7 +209,7 @@ function getInput(row){
  return {mode,m1:mode==='CX'?row.querySelector('.cx1').value:row.querySelector('.directMm').value,m2:mode==='CX'?row.querySelector('.cx2').value:'',size:row.querySelector('.size').value,e1:endData(row,1),e2:endData(row,2),items:itemsData(row)};
 }
 function saveAll(){
- const data=[...document.querySelectorAll('.pipe-row')].map(row=>({
+ const data=[...document.querySelectorAll('#rows .pipe-row')].map(row=>({
   open:row.open,mode:row.querySelector('.mode').value,size:row.querySelector('.size').value,direct:row.querySelector('.directMm').value,cx1:row.querySelector('.cx1').value,cx2:row.querySelector('.cx2').value,
   fit1:row.querySelector('.fit1').value,access1:row.querySelector('.access1').value,f1:row.querySelector('.f1').value,b1:row.querySelector('.b1').value,m1:row.querySelector('.m1').value,
   fit2:row.querySelector('.fit2').value,access2:row.querySelector('.access2').value,f2:row.querySelector('.f2').value,b2:row.querySelector('.b2').value,m2:row.querySelector('.m2').value,
@@ -252,7 +266,7 @@ document.getElementById('clearAll').onclick=()=>{if(!confirm('Clear ALL 50 rows?
 try{
  const saved=JSON.parse(localStorage.getItem('pipeMagic50')||'null');
  if(Array.isArray(saved)){
-  [...document.querySelectorAll('.pipe-row')].forEach((row,i)=>{
+  [...document.querySelectorAll('#rows .pipe-row')].forEach((row,i)=>{
    const d=saved[i];if(!d)return;
    row.open=!!d.open;
    const set=(c,v)=>{const el=row.querySelector('.'+c);if(el)el.value=v||''};
