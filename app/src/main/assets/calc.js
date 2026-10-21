@@ -12,7 +12,13 @@
   const FITTINGS=["","End of pipe","Face of fitting","Elbow","Bend","Equal tee","Tee","Coupling","Reducer"];
   const ACCESS=["","Front","Back","Middle"];
   const ITEM_TYPES=["","Union","Close taper nipple","Barrel nipple"];
-  const DRAIN_SIZES=["1 1/4 in / 32 mm","1 1/2 in / 40 mm","2 in / 50 mm","3 in / 75 mm","3 in / 82 mm","4 in / 110 mm","6 in / 160 mm"];
+  const DRAIN_BRANDS=["Terrain"];
+  const DRAIN_SYSTEMS=["200 Solvent Waste","100 Solvent Soil"];
+  const DRAIN_SIZE_BY_SYSTEM={
+    "200 Solvent Waste":["1 1/4 in / 32 mm","1 1/2 in / 40 mm","2 in / 50 mm"],
+    "100 Solvent Soil":["3 in / 82 mm","4 in / 110 mm","6 in / 160 mm"]
+  };
+  const DRAIN_SIZES=[...DRAIN_SIZE_BY_SYSTEM["200 Solvent Waste"],...DRAIN_SIZE_BY_SYSTEM["100 Solvent Soil"]];
   const DRAIN_FITTINGS=["","End of pipe","Socket / coupling","Bend","Branch","Boss","Reducer","Other"];
   // Overall dimensions used to calculate the extra fitted length of an inserted component.
   // Union overall A: Crane female union. Close/barrel nipple lengths: BS EN 10241.
@@ -179,5 +185,5 @@
     return {state:"ok",horizontal,trueCentre:f.trueLength,drop:f.drop,mmPerM:f.mmPerM,ratio:f.ratio,cut,takeoff1:t1,takeoff2:t2,note:""};
   }
 
-  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,DRAIN_SIZES,DRAIN_FITTINGS,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,fittedItems,calculate,drainageFall,drainageCut};
+  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,DRAIN_BRANDS,DRAIN_SYSTEMS,DRAIN_SIZE_BY_SYSTEM,DRAIN_SIZES,DRAIN_FITTINGS,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,fittedItems,calculate,drainageFall,drainageCut};
 });
