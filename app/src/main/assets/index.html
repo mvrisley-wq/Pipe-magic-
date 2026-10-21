@@ -41,7 +41,7 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
   <div class="sub">PIPE CUTS + DRAINAGE FALL</div>
   <div class="tabs">
     <button class="tab active" id="tabM" type="button">MALLEABLE</button>
-    <button class="tab" id="tabD" type="button">DRAINAGE</button>
+    <button class="tab" id="tabD" type="button">DRAINAGE • GLUE</button>
   </div>
 
   <section id="malleablePane">
@@ -53,7 +53,7 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
   <section id="drainagePane" class="hidden">
     <div class="toolbar"><button class="clearAll" id="clearAllDrain">CLEAR ALL</button><span id="drainStatus" class="status">Drainage centres + fall</span></div>
     <div id="drainRows" class="rows"></div>
-    <div class="footer">Terrain solvent-weld only: 200 Waste (32/40/50 mm) and 100 Soil (82/110/160 mm). No push-fit.</div>
+    <div class="footer">One Pipe Magic app: Malleable + Terrain glue drainage. No push-fit.</div>
   </section>
 </div>
 <script src="calc.js"></script>
@@ -99,7 +99,9 @@ function fmtDrain(v,dp=1){
  return Number.isInteger(n)?String(n):n.toFixed(dp).replace(/0+$/,'').replace(/\.$/,'');
 }
 function drainBrandOpts(){return DRAIN_BRANDS.map(v=>opt(v,v)).join('')}
-function drainSystemOpts(){return '<option value="">System</option>'+DRAIN_SYSTEMS.map(v=>opt(v,v)).join('')}
+function drainSystemOpts(){return '<option value="">Choose glue system</option>'+
+ opt('200 Solvent Waste','Waste glue — 32 / 40 / 50 mm')+
+ opt('100 Solvent Soil','Soil glue — 82 / 110 / 160 mm')}
 function drainSizeOpts(system){return '<option value="">Size</option>'+((DRAIN_SIZE_BY_SYSTEM[system]||[]).map(v=>opt(v,v)).join(''))}
 function drainFitOpts(){return '<option value="">Fitting</option>'+DRAIN_FITTINGS.filter(Boolean).map(v=>opt(v,v)).join('')}
 function drainFallOpts(){return '<option value="OFF">Off / stack</option><option value="40">1 : 40</option><option value="60">1 : 60</option><option value="80">1 : 80</option><option value="100">1 : 100</option><option value="CUSTOM">Custom mm/m</option>'}
@@ -110,7 +112,7 @@ function drainRowHTML(n){
  return '<details class="drain-row pipe-row" data-drow="'+n+'" '+(n===1?'open':'')+'>'+
  '<summary><span class="sumNo">#'+n+'</span><span class="sumSize">—</span><span class="sumCut">—</span></summary>'+
  '<div class="body">'+
- '<div class="drainFallGrid"><label>Brand<select class="dbrand">'+drainBrandOpts()+'</select></label><label>System<select class="dsystem">'+drainSystemOpts()+'</select></label></div>'+
+ '<div class="drainFallGrid"><label>Brand<select class="dbrand">'+drainBrandOpts()+'</select></label><label>Glue system<select class="dsystem">'+drainSystemOpts()+'</select></label></div>'+
  '<div class="top"><label>Mode<select class="dmode">'+modeOpts()+'</select></label><label>Size<select class="dsize">'+drainSizeOpts('')+'</select></label><label class="cutField">CUT<div class="cutBox dcut">—</div></label></div>'+
  '<div class="measure"><div class="directBox ddirectBox"><label>Horizontal C-C mm<input class="ddirect" type="number" inputmode="numeric" min="0" step="1"></label></div>'+
  '<div class="cxBox dcxBox hidden"><label>C1-X<input class="dcx1" type="number" inputmode="numeric" min="0" step="1"></label><label>C2-X<input class="dcx2" type="number" inputmode="numeric" min="0" step="1"></label><label class="derivedField">Horizontal C-C<div class="derived dderived">—</div></label></div></div>'+
