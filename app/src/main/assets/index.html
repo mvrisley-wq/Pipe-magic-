@@ -31,7 +31,7 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
 .drainGrid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:7px;align-items:end}
 .drainResults{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
 .resultBox{background:#eef4f8;border:1px solid #cad5df;border-radius:8px;padding:9px}.resultName{font-size:10px;font-weight:800;color:#666}.resultVal{font-size:20px;font-weight:900;margin-top:3px;color:#17365d}
-.drainNote{margin-top:8px;background:#f7f7f7;border-radius:7px;padding:8px;font-size:11px;font-weight:800}.drainActions{margin-top:8px;display:flex;justify-content:flex-end}.clearDrain{background:#555;color:#fff}.drainFallGrid{margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:7px}.drainEnds{margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:7px}.drainEnd{border-radius:8px;padding:7px}.drainEnd.one{background:var(--blue)}.drainEnd.two{background:var(--orange)}.drainEndGrid{display:grid;grid-template-columns:1fr 1fr;gap:5px}.drainMetrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:7px}.drainMini{background:#eef4f8;border:1px solid #cad5df;border-radius:7px;padding:7px;text-align:center}.drainMini .n{font-size:9px;font-weight:800;color:#666}.drainMini .v{font-size:14px;font-weight:900;color:#17365d;margin-top:2px}
+.drainNote{margin-top:8px;background:#f7f7f7;border-radius:7px;padding:8px;font-size:11px;font-weight:800}.drainActions{margin-top:8px;display:flex;justify-content:flex-end}.clearDrain{background:#555;color:#fff}.drainFallGrid{margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:7px}.drainEnds{margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:7px}.drainEnd{border-radius:8px;padding:7px}.drainEnd.one{background:var(--blue)}.drainEnd.two{background:var(--orange)}.drainEndGrid{display:grid;grid-template-columns:1fr;gap:5px}.autoTake{min-height:34px;border-radius:7px;background:#fff;padding:8px;font-size:12px;font-weight:800;color:#315b22}.autoTake strong{font-size:15px}.drainBrand{min-height:39px;border:1px solid #aaa;border-radius:7px;background:#f7f7f7;padding:9px;font-size:15px;font-weight:900;color:#17365d}.drainMetrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:7px}.drainMini{background:#eef4f8;border:1px solid #cad5df;border-radius:7px;padding:7px;text-align:center}.drainMini .n{font-size:9px;font-weight:800;color:#666}.drainMini .v{font-size:14px;font-weight:900;color:#17365d;margin-top:2px}
 @media(max-width:420px){.title{font-size:18px}.rows{padding:5px}.body{padding:7px}.top{grid-template-columns:1fr 1fr}.top .cutField{grid-column:1/-1}.cxBox{grid-template-columns:1fr 1fr}.cxBox .derivedField{grid-column:1/-1}.ends{grid-template-columns:1fr}.pipe-row>summary{grid-template-columns:36px 1fr 1.1fr}.drainGrid{grid-template-columns:1fr 1fr}.drainGrid .runField{grid-column:1/-1}.drainResults{grid-template-columns:1fr 1fr}.resultVal{font-size:18px}.drainEnds{grid-template-columns:1fr}.drainMetrics{grid-template-columns:1fr 1fr}}
 </style>
 </head>
@@ -51,14 +51,14 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
   </section>
 
   <section id="drainagePane" class="hidden">
-    <div class="toolbar"><button class="clearAll" id="clearAllDrain">CLEAR ALL</button><span id="drainStatus" class="status">Drainage centres + fall</span></div>
+    <div class="toolbar"><button class="clearAll" id="clearAllDrain">CLEAR ALL</button><span id="drainStatus" class="status">Terrain automatic cut lengths</span></div>
     <div id="drainRows" class="rows"></div>
-    <div class="footer">One Pipe Magic app: Malleable + Terrain glue drainage. No push-fit.</div>
+    <div class="footer">Terrain glue only. Catalogue fitting take-offs are automatic where listed; choose Manual / other for anything else.</div>
   </section>
 </div>
 <script src="calc.js"></script>
 <script>
-const {SIZES,FITTINGS,ACCESS,ITEM_TYPES,BARREL_LENGTHS,DRAIN_BRANDS,DRAIN_SYSTEMS,DRAIN_SIZE_BY_SYSTEM,DRAIN_SIZES,DRAIN_FITTINGS,itemAllowance,calculate,drainageFall,drainageCut}=PipeMagic;
+const {SIZES,FITTINGS,ACCESS,ITEM_TYPES,BARREL_LENGTHS,DRAIN_BRANDS,DRAIN_SYSTEMS,DRAIN_SIZE_BY_SYSTEM,itemAllowance,calculate,drainFittings,drainLegs,drainageFall,drainageCut,drainageAutoCut}=PipeMagic;
 const esc=s=>String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 const opt=(v,t)=>'<option value="'+esc(v)+'">'+esc(t==null?v:t)+'</option>';
 function opts(arr){return arr.map(v=>opt(v,v||'Select')).join('')}
@@ -93,31 +93,40 @@ function showPane(which){
 }
 tabM.onclick=()=>showPane('M');tabD.onclick=()=>showPane('D');
 
+
 function fmtDrain(v,dp=1){
  if(!Number.isFinite(v))return '—';
  const p=Math.pow(10,dp),n=Math.round(v*p)/p;
  return Number.isInteger(n)?String(n):n.toFixed(dp).replace(/0+$/,'').replace(/\.$/,'');
 }
-function drainBrandOpts(){return DRAIN_BRANDS.map(v=>opt(v,v)).join('')}
+function drainSizeOpts(system){return '<option value="">Choose size</option>'+((DRAIN_SIZE_BY_SYSTEM[system]||[]).map(v=>opt(v,v)).join(''))}
 function drainSystemOpts(){return '<option value="">Choose glue system</option>'+
  opt('200 Solvent Waste','Waste glue — 32 / 40 / 50 mm')+
  opt('100 Solvent Soil','Soil glue — 82 / 110 / 160 mm')}
-function drainSizeOpts(system){return '<option value="">Size</option>'+((DRAIN_SIZE_BY_SYSTEM[system]||[]).map(v=>opt(v,v)).join(''))}
-function drainFitOpts(){return '<option value="">Fitting</option>'+DRAIN_FITTINGS.filter(Boolean).map(v=>opt(v,v)).join('')}
-function drainFallOpts(){return '<option value="OFF">Off / stack</option><option value="40">1 : 40</option><option value="60">1 : 60</option><option value="80">1 : 80</option><option value="100">1 : 100</option><option value="CUSTOM">Custom mm/m</option>'}
+function drainFitOpts(system,size){return '<option value="">Choose fitting</option>'+drainFittings(system,size).map(x=>opt(x.id,x.label)).join('')}
+function drainFallOpts(){return '<option value="OFF">Off / vertical</option><option value="40">1 : 40</option><option value="60">1 : 60</option><option value="80">1 : 80</option><option value="100">1 : 100</option><option value="CUSTOM">Custom mm/m</option>'}
+function migrateDrainFit(v){
+ if(v==='End of pipe')return 'END';
+ if(['Socket / coupling','Bend','Branch','Boss','Reducer','Other'].includes(v))return '';
+ return v||'';
+}
 function drainEndHTML(n){
- return '<div class="drainEnd '+(n===1?'one':'two')+'"><div class="endTitle">'+(n===1?'UPSTREAM':'DOWNSTREAM')+'</div><div class="drainEndGrid"><label>Fitting<select class="dfit'+n+'">'+drainFitOpts()+'</select></label><label>Take-off mm<input class="dtake'+n+'" type="number" inputmode="decimal" min="0" step="0.1" placeholder="0"></label></div></div>';
+ return '<div class="drainEnd '+(n===1?'one':'two')+'"><div class="endTitle">'+(n===1?'UPSTREAM FITTING':'DOWNSTREAM FITTING')+'</div><div class="drainEndGrid">'+
+ '<label>Fitting<select class="dfit'+n+'"><option value="">Choose fitting</option></select></label>'+
+ '<label class="dlegWrap'+n+' hidden">Pipe connects to<select class="dleg'+n+'"><option value="">Choose leg</option></select></label>'+
+ '<label class="dmanualWrap'+n+' hidden">Manual take-off mm<input class="dmanual'+n+'" type="number" inputmode="decimal" min="0" step="0.1" placeholder="mm"></label>'+
+ '<div class="autoTake">TAKE-OFF: <strong class="dtakeAuto'+n+'">—</strong></div></div></div>';
 }
 function drainRowHTML(n){
  return '<details class="drain-row pipe-row" data-drow="'+n+'" '+(n===1?'open':'')+'>'+
  '<summary><span class="sumNo">#'+n+'</span><span class="sumSize">—</span><span class="sumCut">—</span></summary>'+
  '<div class="body">'+
- '<div class="drainFallGrid"><label>Brand<select class="dbrand">'+drainBrandOpts()+'</select></label><label>Glue system<select class="dsystem">'+drainSystemOpts()+'</select></label></div>'+
- '<div class="top"><label>Mode<select class="dmode">'+modeOpts()+'</select></label><label>Size<select class="dsize">'+drainSizeOpts('')+'</select></label><label class="cutField">CUT<div class="cutBox dcut">—</div></label></div>'+
- '<div class="measure"><div class="directBox ddirectBox"><label>Horizontal C-C mm<input class="ddirect" type="number" inputmode="numeric" min="0" step="1"></label></div>'+
- '<div class="cxBox dcxBox hidden"><label>C1-X<input class="dcx1" type="number" inputmode="numeric" min="0" step="1"></label><label>C2-X<input class="dcx2" type="number" inputmode="numeric" min="0" step="1"></label><label class="derivedField">Horizontal C-C<div class="derived dderived">—</div></label></div></div>'+
- '<div class="drainFallGrid"><label>Fall<select class="dfall">'+drainFallOpts()+'</select></label><label class="dcustomWrap hidden">Custom mm/m<input class="dcustom" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 20"></label></div>'+
+ '<div class="drainFallGrid"><label>Brand<div class="drainBrand">Terrain</div></label><label>Glue system<select class="dsystem">'+drainSystemOpts()+'</select></label></div>'+
+ '<div class="top"><label>Measure<select class="dmode">'+modeOpts()+'</select></label><label>Pipe size<select class="dsize">'+drainSizeOpts('')+'</select></label><label class="cutField">CUT LENGTH<div class="cutBox dcut">—</div></label></div>'+
+ '<div class="measure"><div class="directBox ddirectBox"><label>Centre-to-centre mm<input class="ddirect" type="number" inputmode="numeric" min="0" step="1" placeholder="mm"></label></div>'+
+ '<div class="cxBox dcxBox hidden"><label>C1-X<input class="dcx1" type="number" inputmode="numeric" min="0" step="1"></label><label>C2-X<input class="dcx2" type="number" inputmode="numeric" min="0" step="1"></label><label class="derivedField">C-C<div class="derived dderived">—</div></label></div></div>'+
  '<div class="drainEnds">'+drainEndHTML(1)+drainEndHTML(2)+'</div>'+
+ '<div class="drainFallGrid"><label>Fall<select class="dfall">'+drainFallOpts()+'</select></label><label class="dcustomWrap hidden">Custom mm/m<input class="dcustom" type="number" inputmode="decimal" min="0" step="0.1" placeholder="e.g. 20"></label></div>'+
  '<div class="drainMetrics"><div class="drainMini"><div class="n">FALL / m</div><div class="v dmm">—</div></div><div class="drainMini"><div class="n">DROP</div><div class="v ddrop">—</div></div><div class="drainMini"><div class="n">TRUE C-C</div><div class="v dtrue">—</div></div><div class="drainMini"><div class="n">RATIO</div><div class="v dratio">—</div></div></div>'+
  '<div class="note dnote"></div><div class="rowActions"><button class="clearRow clearDrainRow" type="button">CLR ROW</button></div>'+
  '</div></details>';
@@ -125,84 +134,129 @@ function drainRowHTML(n){
 const drainRows=document.getElementById('drainRows');
 drainRows.innerHTML=Array.from({length:50},(_,i)=>drainRowHTML(i+1)).join('');
 
+function refreshDrainChoices(row){
+ const system=row.querySelector('.dsystem').value,size=row.querySelector('.dsize').value;
+ [1,2].forEach(n=>{
+   const el=row.querySelector('.dfit'+n),old=migrateDrainFit(el.value);
+   el.innerHTML=drainFitOpts(system,size);
+   if([...el.options].some(o=>o.value===old))el.value=old;
+ });
+}
+function refreshDrainEnd(row,n){
+ const system=row.querySelector('.dsystem').value,size=row.querySelector('.dsize').value;
+ const fit=row.querySelector('.dfit'+n).value;
+ const legWrap=row.querySelector('.dlegWrap'+n),leg=row.querySelector('.dleg'+n);
+ const manualWrap=row.querySelector('.dmanualWrap'+n),manual=row.querySelector('.dmanual'+n);
+ const take=row.querySelector('.dtakeAuto'+n);
+ legWrap.classList.add('hidden');manualWrap.classList.add('hidden');
+ if(!fit){take.textContent='—';return}
+ if(fit==='END'){take.textContent='0 mm';return}
+ if(fit==='MANUAL'){
+   manualWrap.classList.remove('hidden');
+   take.textContent=manual.value===''?'enter mm':fmtDrain(Number(manual.value),1)+' mm';
+   return;
+ }
+ const legs=drainLegs(system,size,fit);
+ if(!legs.length){take.textContent='not listed';return}
+ if(legs.length===1){leg.innerHTML=opt(legs[0].id,legs[0].label);leg.value=legs[0].id;take.textContent=fmtDrain(legs[0].takeoff,1)+' mm auto';return}
+ const old=leg.value;
+ leg.innerHTML='<option value="">Choose which leg</option>'+legs.map(x=>opt(x.id,x.label+' — '+fmtDrain(x.takeoff,1)+' mm')).join('');
+ if(legs.some(x=>x.id===old))leg.value=old;
+ legWrap.classList.remove('hidden');
+ const chosen=legs.find(x=>x.id===leg.value);
+ take.textContent=chosen?fmtDrain(chosen.takeoff,1)+' mm auto':'choose leg';
+}
 function drainInput(row){
  const mode=row.querySelector('.dmode').value;
- const f1=row.querySelector('.dfit1').value,f2=row.querySelector('.dfit2').value;
- const t1=f1==='End of pipe'?0:row.querySelector('.dtake1').value;
- const t2=f2==='End of pipe'?0:row.querySelector('.dtake2').value;
- return {measureMode:mode,m1:mode==='CX'?row.querySelector('.dcx1').value:row.querySelector('.ddirect').value,m2:mode==='CX'?row.querySelector('.dcx2').value:'',fallMode:row.querySelector('.dfall').value,customMmPerM:row.querySelector('.dcustom').value,takeoff1:t1,takeoff2:t2};
+ return {
+  system:row.querySelector('.dsystem').value,size:row.querySelector('.dsize').value,
+  measureMode:mode,m1:mode==='CX'?row.querySelector('.dcx1').value:row.querySelector('.ddirect').value,m2:mode==='CX'?row.querySelector('.dcx2').value:'',
+  fallMode:row.querySelector('.dfall').value,customMmPerM:row.querySelector('.dcustom').value,
+  fit1:row.querySelector('.dfit1').value,leg1:row.querySelector('.dleg1').value,manual1:row.querySelector('.dmanual1').value,
+  fit2:row.querySelector('.dfit2').value,leg2:row.querySelector('.dleg2').value,manual2:row.querySelector('.dmanual2').value
+ };
 }
 function saveDrainRows(){
  const data=[...document.querySelectorAll('.drain-row')].map(row=>({
-  open:row.open,brand:row.querySelector('.dbrand').value,system:row.querySelector('.dsystem').value,mode:row.querySelector('.dmode').value,size:row.querySelector('.dsize').value,direct:row.querySelector('.ddirect').value,cx1:row.querySelector('.dcx1').value,cx2:row.querySelector('.dcx2').value,
-  fall:row.querySelector('.dfall').value,custom:row.querySelector('.dcustom').value,fit1:row.querySelector('.dfit1').value,take1:row.querySelector('.dtake1').value,fit2:row.querySelector('.dfit2').value,take2:row.querySelector('.dtake2').value
+  open:row.open,system:row.querySelector('.dsystem').value,mode:row.querySelector('.dmode').value,size:row.querySelector('.dsize').value,direct:row.querySelector('.ddirect').value,cx1:row.querySelector('.dcx1').value,cx2:row.querySelector('.dcx2').value,
+  fall:row.querySelector('.dfall').value,custom:row.querySelector('.dcustom').value,
+  fit1:row.querySelector('.dfit1').value,leg1:row.querySelector('.dleg1').value,manual1:row.querySelector('.dmanual1').value,
+  fit2:row.querySelector('.dfit2').value,leg2:row.querySelector('.dleg2').value,manual2:row.querySelector('.dmanual2').value
  }));
  try{localStorage.setItem('pipeMagicDrainRows',JSON.stringify(data))}catch(e){}
+}
+function clearDrainResults(row,noteText){
+ row.querySelector('.dcut').textContent='—';row.querySelector('.sumCut').textContent='—';
+ row.querySelector('.dderived').textContent='—';
+ ['.dmm','.ddrop','.dtrue','.dratio'].forEach(x=>row.querySelector(x).textContent='—');
+ row.querySelector('.dnote').textContent=noteText||'';
 }
 function calcDrainRow(row){
  const mode=row.querySelector('.dmode').value;
  row.querySelector('.ddirectBox').classList.toggle('hidden',mode==='CX');
  row.querySelector('.dcxBox').classList.toggle('hidden',mode!=='CX');
  row.querySelector('.dcustomWrap').classList.toggle('hidden',row.querySelector('.dfall').value!=='CUSTOM');
- [1,2].forEach(n=>{
-  const fit=row.querySelector('.dfit'+n).value,take=row.querySelector('.dtake'+n);
-  if(fit==='End of pipe'){take.value='0';take.disabled=true}else take.disabled=false;
- });
- const system=row.querySelector('.dsystem').value;
- const size=row.querySelector('.dsize').value;
+ refreshDrainEnd(row,1);refreshDrainEnd(row,2);
+ const system=row.querySelector('.dsystem').value,size=row.querySelector('.dsize').value;
  row.querySelector('.sumSize').textContent=size||'—';
- const note=row.querySelector('.dnote');
- const f1=row.querySelector('.dfit1').value,f2=row.querySelector('.dfit2').value;
- if(!system){row.querySelector('.dcut').textContent='—';row.querySelector('.sumCut').textContent='—';note.textContent='SELECT TERRAIN SOLVENT SYSTEM';saveDrainRows();return}
- if(!size){row.querySelector('.dcut').textContent='—';row.querySelector('.sumCut').textContent='—';note.textContent='SELECT PIPE SIZE';saveDrainRows();return}
- if(!f1||!f2){row.querySelector('.dcut').textContent='—';row.querySelector('.sumCut').textContent='—';note.textContent='SELECT END FITTINGS';saveDrainRows();return}
- if((f1!=='End of pipe'&&row.querySelector('.dtake1').value==='')||(f2!=='End of pipe'&&row.querySelector('.dtake2').value==='')){
-  row.querySelector('.dcut').textContent='—';row.querySelector('.sumCut').textContent='—';note.textContent='ENTER FITTING TAKE-OFFS';saveDrainRows();return;
- }
- const r=drainageCut(drainInput(row));
- if(r.state!=='ok'){
-  row.querySelector('.dcut').textContent='—';row.querySelector('.sumCut').textContent='—';row.querySelector('.dderived').textContent='—';
-  ['.dmm','.ddrop','.dtrue','.dratio'].forEach(s=>row.querySelector(s).textContent='—');note.textContent=r.note;saveDrainRows();return;
- }
- row.querySelector('.dcut').textContent=fmtDrain(r.cut,1)+' mm';row.querySelector('.sumCut').textContent=fmtDrain(r.cut,1)+' mm';
+ if(!system){clearDrainResults(row,'CHOOSE WASTE GLUE OR SOIL GLUE');saveDrainRows();return}
+ if(!size){clearDrainResults(row,'CHOOSE PIPE SIZE');saveDrainRows();return}
+ if(!row.querySelector('.dfit1').value||!row.querySelector('.dfit2').value){clearDrainResults(row,'CHOOSE BOTH END FITTINGS');saveDrainRows();return}
+ const r=drainageAutoCut(drainInput(row));
+ if(r.state!=='ok'){clearDrainResults(row,r.note);saveDrainRows();return}
+ row.querySelector('.dcut').textContent=fmtDrain(r.cut,1)+' mm';
+ row.querySelector('.sumCut').textContent=fmtDrain(r.cut,1)+' mm';
  row.querySelector('.dderived').textContent=mode==='CX'?fmtDrain(r.horizontal,1)+' mm':'—';
  row.querySelector('.dmm').textContent=fmtDrain(r.mmPerM,1)+' mm';
  row.querySelector('.ddrop').textContent=fmtDrain(r.drop,1)+' mm';
  row.querySelector('.dtrue').textContent=fmtDrain(r.trueCentre,1)+' mm';
  row.querySelector('.dratio').textContent=r.ratio===null?'OFF':'1:'+fmtDrain(r.ratio,1);
- note.textContent='UPSTREAM → DOWNSTREAM: horizontal C-C '+fmtDrain(r.horizontal,1)+' mm → true sloping C-C '+fmtDrain(r.trueCentre,1)+' mm, less fitting take-offs.';
+ row.querySelector('.dnote').textContent='CUT '+fmtDrain(r.cut,1)+' mm • auto take-offs '+fmtDrain(r.upstreamTakeoff,1)+' + '+fmtDrain(r.downstreamTakeoff,1)+' mm';
  saveDrainRows();
+}
+function resetDrainRow(row){
+ row.querySelectorAll('input').forEach(el=>el.value='');
+ row.querySelector('.dsystem').value='';
+ row.querySelector('.dsize').innerHTML=drainSizeOpts('');
+ row.querySelector('.dmode').value='DIRECT';row.querySelector('.dfall').value='OFF';
+ refreshDrainChoices(row);calcDrainRow(row);
 }
 function clearDrainRow(row){
  if(!confirm('Clear drainage row '+row.dataset.drow+'?'))return;
- row.querySelectorAll('input').forEach(el=>{el.value='';el.disabled=false});
- row.querySelectorAll('select').forEach(el=>el.selectedIndex=0);
- row.querySelector('.dmode').value='DIRECT';row.querySelector('.dfall').value='OFF';calcDrainRow(row);
+ resetDrainRow(row);
 }
 drainRows.addEventListener('input',e=>{const row=e.target.closest('.drain-row');if(row)calcDrainRow(row)});
-drainRows.addEventListener('change',e=>{const row=e.target.closest('.drain-row');if(!row)return;
+drainRows.addEventListener('change',e=>{
+ const row=e.target.closest('.drain-row');if(!row)return;
  if(e.target.classList.contains('dsystem')){
-   const sizeSel=row.querySelector('.dsize'); const old=sizeSel.value;
+   const sizeSel=row.querySelector('.dsize'),old=sizeSel.value;
    sizeSel.innerHTML=drainSizeOpts(e.target.value);
-   if([...sizeSel.options].some(o=>o.value===old)) sizeSel.value=old;
+   if([...sizeSel.options].some(o=>o.value===old))sizeSel.value=old;
+   refreshDrainChoices(row);
  }
- calcDrainRow(row)
+ if(e.target.classList.contains('dsize'))refreshDrainChoices(row);
+ calcDrainRow(row);
 });
 drainRows.addEventListener('click',e=>{if(e.target.classList.contains('clearDrainRow'))clearDrainRow(e.target.closest('.drain-row'))});
-document.getElementById('clearAllDrain').onclick=()=>{if(!confirm('Clear ALL drainage rows?'))return;localStorage.removeItem('pipeMagicDrainRows');[...document.querySelectorAll('.drain-row')].forEach(row=>{row.querySelectorAll('input').forEach(el=>{el.value='';el.disabled=false});row.querySelectorAll('select').forEach(el=>el.selectedIndex=0);row.querySelector('.dmode').value='DIRECT';row.querySelector('.dfall').value='OFF';calcDrainRow(row)})};
+document.getElementById('clearAllDrain').onclick=()=>{if(!confirm('Clear ALL drainage rows?'))return;localStorage.removeItem('pipeMagicDrainRows');[...document.querySelectorAll('.drain-row')].forEach(resetDrainRow)};
 try{
  const saved=JSON.parse(localStorage.getItem('pipeMagicDrainRows')||'null');
  if(Array.isArray(saved)){
   [...document.querySelectorAll('.drain-row')].forEach((row,i)=>{
    const d=saved[i];if(!d)return;row.open=!!d.open;
-   const set=(c,v)=>{const el=row.querySelector('.'+c);if(el)el.value=v||''};
-   set('dbrand',d.brand||'Terrain');set('dsystem',d.system||'');
-   const sizeSel=row.querySelector('.dsize');sizeSel.innerHTML=drainSizeOpts(row.querySelector('.dsystem').value);
-   set('dmode',d.mode||'DIRECT');set('dsize',d.size);set('ddirect',d.direct);set('dcx1',d.cx1);set('dcx2',d.cx2);set('dfall',d.fall||'OFF');set('dcustom',d.custom);set('dfit1',d.fit1);set('dtake1',d.take1);set('dfit2',d.fit2);set('dtake2',d.take2);calcDrainRow(row);
+   const set=(c,v)=>{const el=row.querySelector('.'+c);if(el)el.value=v??''};
+   set('dsystem',d.system||'');
+   row.querySelector('.dsize').innerHTML=drainSizeOpts(row.querySelector('.dsystem').value);
+   set('dsize',d.size);refreshDrainChoices(row);
+   set('dmode',d.mode||'DIRECT');set('ddirect',d.direct);set('dcx1',d.cx1);set('dcx2',d.cx2);set('dfall',d.fall||'OFF');set('dcustom',d.custom);
+   set('dfit1',migrateDrainFit(d.fit1));set('dfit2',migrateDrainFit(d.fit2));
+   refreshDrainEnd(row,1);refreshDrainEnd(row,2);
+   set('dleg1',d.leg1);set('dleg2',d.leg2);set('dmanual1',d.manual1??d.take1);set('dmanual2',d.manual2??d.take2);
+   calcDrainRow(row);
   });
  }
 }catch(e){}
-[...document.querySelectorAll('.drain-row')].forEach(calcDrainRow);
+[...document.querySelectorAll('.drain-row')].forEach(row=>{if(!row.querySelector('.dfit1').options.length)refreshDrainChoices(row);calcDrainRow(row)});
 
 function endData(row,n){return {fit:row.querySelector('.fit'+n).value,access:row.querySelector('.access'+n).value,F:row.querySelector('.f'+n).value,B:row.querySelector('.b'+n).value,M:row.querySelector('.m'+n).value}}
 function itemsData(row){return [1,2,3].map(n=>({type:row.querySelector('.itemType'+n).value,length:row.querySelector('.itemLen'+n).value}))}
