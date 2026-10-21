@@ -56,4 +56,20 @@ eq(dcx.horizontal,4000,"drainage C-X horizontal C-C");
 eq(dcx.drop,40,"drainage C-X fall drop");
 assert.ok(Math.abs(dcx.cut-3925.19999500025)<0.001,"drainage C-X cut");
 
+eq(Calc.drainNominal("1 1/2 in / 40 mm"),"40","drainage nominal size");
+eq(Calc.drainTakeoff("200 Solvent Waste","1 1/2 in / 40 mm","SWEEP91","",0).takeoff,38,"Terrain 40 waste swept bend 91 take-off");
+eq(Calc.drainTakeoff("200 Solvent Waste","1 1/2 in / 40 mm","BRANCH91","2",0).takeoff,22,"Terrain 40 waste branch side take-off");
+eq(Calc.drainTakeoff("100 Solvent Soil","4 in / 110 mm","SWEEP92","0",0).takeoff,75,"Terrain 110 soil bend side A");
+eq(Calc.drainTakeoff("100 Solvent Soil","4 in / 110 mm","SWEEP92","1",0).takeoff,83,"Terrain 110 soil bend side B");
+eq(Calc.drainTakeoff("100 Solvent Soil","4 in / 110 mm","DOUBLE92","2",0).takeoff,50,"Terrain 110 double branch A");
+eq(Calc.drainTakeoff("100 Solvent Soil","4 in / 110 mm","DOUBLE92","3",0).takeoff,50,"Terrain 110 double branch B");
+
+const autoDrain=Calc.drainageAutoCut({
+  system:"200 Solvent Waste",size:"1 1/2 in / 40 mm",
+  measureMode:"DIRECT",m1:2000,fallMode:"OFF",
+  fit1:"SWEEP91",leg1:"",fit2:"BRANCH91",leg2:"2"
+});
+eq(autoDrain.state,"ok","Terrain automatic drainage cut state");
+eq(autoDrain.cut,1940,"Terrain automatic drainage cut");
+
 console.log("ALL PIPE MAGIC TESTS PASSED");
