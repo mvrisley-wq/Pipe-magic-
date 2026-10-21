@@ -19,7 +19,26 @@
     "100 Solvent Soil":["3 in / 82 mm","4 in / 110 mm","6 in / 160 mm"]
   };
   const DRAIN_SIZES=[...DRAIN_SIZE_BY_SYSTEM["200 Solvent Waste"],...DRAIN_SIZE_BY_SYSTEM["100 Solvent Soil"]];
-  const DRAIN_FITTINGS=["","End of pipe","Socket / coupling","Bend","Branch","Boss","Reducer","Other"];
+  const DRAIN_FITTINGS=["","End of pipe","Swept bend","Branch","Double branch","Manual / other"];
+  // Terrain solvent-weld catalogue Z dimensions (mm). The app keeps the catalogue
+  // detail hidden and exposes only the fitting/leg needed to get the pipe cut.
+  const DRAIN_CATALOGUE={
+    "200 Solvent Waste":{
+      "SWEEP91":{label:"Swept bend 91¼°",values:{"32":[34,34],"40":[38,38],"50":[45,45]}},
+      "SWEEP135":{label:"Swept bend 135°",values:{"32":[10,10],"40":[11,11],"50":[14,14]}},
+      "SWEEP165":{label:"Swept bend 165°",values:{"32":[5,5],"40":[5,5],"50":[6,6]}},
+      "BRANCH91":{label:"Swept branch 91¼°",legLabels:["Main A","Main B","Side branch"],values:{"32":[30,30,19],"40":[32,35,22],"50":[43,43,29]}},
+      "BRANCH135":{label:"Swept branch 135°",legLabels:["Main A","Main B","Side branch"],values:{"32":[8,48,48],"40":[10,57,57],"50":[13,71,71]}}
+    },
+    "100 Solvent Soil":{
+      "SWEEP92":{label:"Swept bend 92½°",values:{"82":[102,98],"110":[75,83],"160":[178,184]}},
+      "SWEEP135":{label:"Swept bend 135°",values:{"82":[25,25],"110":[21,30],"160":[44,44]}},
+      "BRANCH92":{label:"Equal branch 92½°",legLabels:["Main A","Main B","Side branch"],values:{"82":[70,83,35],"110":[82,82,54],"160":[184,178,160]}},
+      "BRANCH104":{label:"Equal branch 104°",legLabels:["Main A","Main B","Side branch"],values:{"110":[77,74,72]}},
+      "BRANCH135":{label:"Equal branch 135°",legLabels:["Main A","Main B","Side branch"],values:{"82":[19,108,102],"110":[25,137,137]}},
+      "DOUBLE92":{label:"Double branch 92½°",legLabels:["Main A","Main B","Branch A","Branch B"],values:{"110":[138,95,50,50]}}
+    }
+  };
   // Overall dimensions used to calculate the extra fitted length of an inserted component.
   // Union overall A: Crane female union. Close/barrel nipple lengths: BS EN 10241.
   const UNION_OVERALL={"1/2":49,"3/4":53,"1":58,"1 1/4":64,"1 1/2":68,"2":75,"2 1/2":84,"3":92,"4":107};
@@ -147,6 +166,64 @@
     return {cut,base,extras:extras.total,end1:a.ded,end2:b.ded,note:""};
   }
 
+  function drainNominal(sizeLabel){
+    const m=String(sizeLabel||"").match(/\/(?:\s*)?(\d+)\s*mm/i);
+    if(m) return m[1];
+    const n=String(sizeLabel||"").match(/(\d+)\s*mm/i);
+    return n?n[1]:"";
+  }
+
+  function drainFittings(system,sizeLabel){
+    const size=drainNominal(sizeLabel);
+    const table=DRAIN_CATALOGUE[system]||{};
+    const out=[{id:"END",label:"End of pipe"}];
+    Object.entries(table).forEach(([id,d])=>{if(d.values&&d.values[size]) out.push({id,label:d.label})});
+    out.push({id:"MANUAL",label:"Manual / other fitting"});
+    return out;
+  }
+
+  function drainLegs(system,sizeLabel,fitId){
+    if(fitId==="END"||fitId==="MANUAL"||!fitId) return [];
+    const size=drainNominal(sizeLabel);
+    const d=(DRAIN_CATALOGUE[system]||{})[fitId];
+    if(!d||!d.values||!d.values[size]) return [];
+    const vals=d.values[size];
+    if(vals.length===1 || vals.every(v=>v===vals[0])) return [{id:"0",label:"Either end",takeoff:vals[0]}];
+    const labels=d.legLabels||vals.map((v,i)=>"Side "+String.fromCharCode(65+i));
+    return vals.map((takeoff,i)=>({id:String(i),label:labels[i]||("Side "+(i+1)),takeoff}));
+  }
+
+  function drainTakeoff(system,sizeLabel,fitId,legId,manualValue){
+    if(!fitId) return {state:"details",note:"SELECT FITTING"};
+    if(fitId==="END") return {state:"ok",takeoff:0,label:"End of pipe"};
+    if(fitId==="MANUAL"){
+      const n=Number(manualValue);
+      if(!Number.isFinite(n)||n<0) return {state:"details",note:"ENTER FITTING TAKE-OFF"};
+      return {state:"ok",takeoff:n,label:"Manual / other fitting"};
+    }
+    const legs=drainLegs(system,sizeLabel,fitId);
+    if(!legs.length) return {state:"details",note:"FITTING NOT AVAILABLE FOR THIS SIZE"};
+    if(legs.length===1) return {state:"ok",takeoff:legs[0].takeoff,label:legs[0].label};
+    const leg=legs.find(x=>x.id===String(legId));
+    if(!leg) return {state:"details",note:"SELECT WHICH FITTING LEG"};
+    return {state:"ok",takeoff:leg.takeoff,label:leg.label};
+  }
+
+  function drainageAutoCut(input){
+    input=input||{};
+    const a=drainTakeoff(input.system,input.size,input.fit1,input.leg1,input.manual1);
+    if(a.state!=="ok") return {state:"details",note:"UPSTREAM: "+a.note};
+    const b=drainTakeoff(input.system,input.size,input.fit2,input.leg2,input.manual2);
+    if(b.state!=="ok") return {state:"details",note:"DOWNSTREAM: "+b.note};
+    const r=drainageCut({
+      measureMode:input.measureMode,m1:input.m1,m2:input.m2,
+      fallMode:input.fallMode,customMmPerM:input.customMmPerM,
+      takeoff1:a.takeoff,takeoff2:b.takeoff
+    });
+    if(r.state!=="ok") return r;
+    return {...r,upstreamTakeoff:a.takeoff,downstreamTakeoff:b.takeoff};
+  }
+
   function drainageFall(input){
     input=input||{};
     const run=Number(input.run);
@@ -185,5 +262,5 @@
     return {state:"ok",horizontal,trueCentre:f.trueLength,drop:f.drop,mmPerM:f.mmPerM,ratio:f.ratio,cut,takeoff1:t1,takeoff2:t2,note:""};
   }
 
-  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,DRAIN_BRANDS,DRAIN_SYSTEMS,DRAIN_SIZE_BY_SYSTEM,DRAIN_SIZES,DRAIN_FITTINGS,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,fittedItems,calculate,drainageFall,drainageCut};
+  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,DRAIN_BRANDS,DRAIN_SYSTEMS,DRAIN_SIZE_BY_SYSTEM,DRAIN_SIZES,DRAIN_FITTINGS,DRAIN_CATALOGUE,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,fittedItems,calculate,drainNominal,drainFittings,drainLegs,drainTakeoff,drainageFall,drainageCut,drainageAutoCut};
 });
