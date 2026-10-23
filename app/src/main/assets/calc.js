@@ -14,6 +14,14 @@
   const ITEM_TYPES=["","Union","Close taper nipple","Barrel nipple"];
   const COMPONENT_TYPES=["","IV","DRV","DRV + CS","Strainer","NRV","Custom component"];
   const COMPONENT_BRANDS=["Crane","Hattersley","TGL","Smith","Pegler","Brymec","Custom"];
+  const COMPONENT_CATALOGUE={
+    "Crane":{
+      "IV":{model:"D171",values:{"1/2":55,"3/4":64,"1":77,"1 1/4":91,"1 1/2":103,"2":122,"2 1/2":153}},
+      "DRV":{model:"D921",values:{"1/2":87,"3/4":96,"1":100,"1 1/4":114,"1 1/2":125,"2":146}},
+      "Strainer":{model:"D297",values:{"1/2":71,"3/4":86,"1":101,"1 1/4":134,"1 1/2":148,"2":176}},
+      "NRV":{model:"D140",values:{"1/2":58,"3/4":66,"1":80,"1 1/4":89,"1 1/2":95,"2":108,"2 1/2":153,"3":188}}
+    }
+  };
   const DRAIN_BRANDS=["Terrain"];
   const DRAIN_SYSTEMS=["200 Solvent Waste","100 Solvent Soil"];
   const DRAIN_SIZE_BY_SYSTEM={
@@ -133,17 +141,26 @@
     return {state:"details",ded:0,note:"SELECT ADD-ON"};
   }
 
+  function componentCatalogue(brand,type,size){
+    const item=COMPONENT_CATALOGUE[brand]&&COMPONENT_CATALOGUE[brand][type];
+    if(!item||!item.values||item.values[size]===undefined) return null;
+    return {brand,type,size,model:item.model,overall:item.values[size]};
+  }
+
   function componentAllowance(size,component){
     if(!component || !component.type) return {state:"ok",ded:0};
     if(!size || !(size in THREAD)) return {state:"details",ded:0,note:"SELECT PIPE SIZE"};
-    const overall=Number(component.overall);
-    if(!Number.isFinite(overall)||overall<=0) return {state:"details",ded:0,note:"ENTER COMPONENT OVERALL LENGTH"};
     const brand=String(component.brand||"").trim();
     if(!brand) return {state:"details",ded:0,note:"SELECT COMPONENT BRAND"};
+    const manual=Number(component.overall);
+    const hasManual=Number.isFinite(manual)&&manual>0;
+    const cat=componentCatalogue(brand,component.type,size);
+    const overall=hasManual?manual:(cat?cat.overall:NaN);
+    if(!Number.isFinite(overall)||overall<=0) return {state:"details",ded:0,note:"ENTER COMPONENT OVERALL LENGTH"};
     const engagement=THREAD[size];
     const ded=overall-(2*engagement);
     if(ded<0) return {state:"details",ded:0,note:"CHECK COMPONENT LENGTH"};
-    return {state:"ok",ded,overall,engagement,type:component.type,brand};
+    return {state:"ok",ded,overall,engagement,type:component.type,brand,auto:!hasManual&&!!cat,model:cat?cat.model:""};
   }
 
   function fittedComponents(size,components){
@@ -292,5 +309,5 @@
     return {state:"ok",horizontal,trueCentre:f.trueLength,drop:f.drop,mmPerM:f.mmPerM,ratio:f.ratio,cut,takeoff1:t1,takeoff2:t2,note:""};
   }
 
-  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,COMPONENT_TYPES,COMPONENT_BRANDS,DRAIN_BRANDS,DRAIN_SYSTEMS,DRAIN_SIZE_BY_SYSTEM,DRAIN_SIZES,DRAIN_FITTINGS,DRAIN_CATALOGUE,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,componentAllowance,fittedComponents,fittedItems,calculate,drainNominal,drainFittings,drainLegs,drainTakeoff,drainageFall,drainageCut,drainageAutoCut};
+  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,COMPONENT_TYPES,COMPONENT_BRANDS,COMPONENT_CATALOGUE,DRAIN_BRANDS,DRAIN_SYSTEMS,DRAIN_SIZE_BY_SYSTEM,DRAIN_SIZES,DRAIN_FITTINGS,DRAIN_CATALOGUE,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,componentCatalogue,componentAllowance,fittedComponents,fittedItems,calculate,drainNominal,drainFittings,drainLegs,drainTakeoff,drainageFall,drainageCut,drainageAutoCut};
 });
