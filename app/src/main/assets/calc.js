@@ -12,6 +12,8 @@
   const FITTINGS=["","End of pipe","Face of fitting","Elbow","Bend","Equal tee","Tee","Coupling","Reducer"];
   const ACCESS=["","Front","Back","Middle"];
   const ITEM_TYPES=["","Union","Close taper nipple","Barrel nipple"];
+  const COMPONENT_TYPES=["","IV","DRV","DRV + CS","Strainer","NRV","Custom component"];
+  const COMPONENT_BRANDS=["Crane","Hattersley","TGL","Smith","Pegler","Custom"];
   const DRAIN_BRANDS=["Terrain"];
   const DRAIN_SYSTEMS=["200 Solvent Waste","100 Solvent Soil"];
   const DRAIN_SIZE_BY_SYSTEM={
@@ -131,6 +133,32 @@
     return {state:"details",ded:0,note:"SELECT ADD-ON"};
   }
 
+  function componentAllowance(size,component){
+    if(!component || !component.type) return {state:"ok",ded:0};
+    if(!size || !(size in THREAD)) return {state:"details",ded:0,note:"SELECT PIPE SIZE"};
+    const overall=Number(component.overall);
+    if(!Number.isFinite(overall)||overall<=0) return {state:"details",ded:0,note:"ENTER COMPONENT OVERALL LENGTH"};
+    const brand=String(component.brand||"").trim();
+    if(!brand) return {state:"details",ded:0,note:"SELECT COMPONENT BRAND"};
+    const engagement=THREAD[size];
+    const ded=overall-(2*engagement);
+    if(ded<0) return {state:"details",ded:0,note:"CHECK COMPONENT LENGTH"};
+    return {state:"ok",ded,overall,engagement,type:component.type,brand};
+  }
+
+  function fittedComponents(size,components){
+    let total=0;
+    const details=[];
+    for(const component of (components||[])){
+      if(!component || !component.type) continue;
+      const r=componentAllowance(size,component);
+      if(r.state!=="ok") return {state:"details",total:0,note:r.note,details};
+      total+=r.ded;
+      details.push(r);
+    }
+    return {state:"ok",total,details};
+  }
+
   function fittedItems(size,items){
     let total=0;
     const details=[];
@@ -160,10 +188,12 @@
 
     const extras=fittedItems(input.size,input.items);
     if(extras.state!=="ok") return {cut:"",base,note:extras.note};
+    const components=fittedComponents(input.size,input.components);
+    if(components.state!=="ok") return {cut:"",base,note:components.note};
 
-    const cut=Math.round(base-a.ded-b.ded-extras.total);
+    const cut=Math.round(base-a.ded-b.ded-extras.total-components.total);
     if(cut<0) return {cut:"",base,note:"TOO SHORT FOR FITTINGS / ADD-ONS"};
-    return {cut,base,extras:extras.total,end1:a.ded,end2:b.ded,note:""};
+    return {cut,base,extras:extras.total,components:components.total,end1:a.ded,end2:b.ded,note:""};
   }
 
   function drainNominal(sizeLabel){
@@ -262,5 +292,5 @@
     return {state:"ok",horizontal,trueCentre:f.trueLength,drop:f.drop,mmPerM:f.mmPerM,ratio:f.ratio,cut,takeoff1:t1,takeoff2:t2,note:""};
   }
 
-  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,DRAIN_BRANDS,DRAIN_SYSTEMS,DRAIN_SIZE_BY_SYSTEM,DRAIN_SIZES,DRAIN_FITTINGS,DRAIN_CATALOGUE,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,fittedItems,calculate,drainNominal,drainFittings,drainLegs,drainTakeoff,drainageFall,drainageCut,drainageAutoCut};
+  return {THREAD,ELBOW,BEND,SOCKET,EQTEE,SIZES,FITTINGS,ACCESS,ITEM_TYPES,COMPONENT_TYPES,COMPONENT_BRANDS,DRAIN_BRANDS,DRAIN_SYSTEMS,DRAIN_SIZE_BY_SYSTEM,DRAIN_SIZES,DRAIN_FITTINGS,DRAIN_CATALOGUE,UNION_OVERALL,CLOSE_OVERALL,BARREL_LENGTHS,TEES,measure,endResult,itemAllowance,componentAllowance,fittedComponents,fittedItems,calculate,drainNominal,drainFittings,drainLegs,drainTakeoff,drainageFall,drainageCut,drainageAutoCut};
 });
