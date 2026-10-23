@@ -49,8 +49,8 @@ eq(Calc.calculate({mode:"DIRECT",m1:1000,size:"1/2",e1:{fit:"End of pipe"},e2:{f
 eq(Calc.componentAllowance("1/2",{type:"Strainer",brand:"Crane",overall:71}).ded,45,"1/2 inline component uses two 13 mm engagements");
 eq(Calc.componentAllowance("1/2",{type:"IV",brand:"Brymec",overall:71}).ded,45,"Brymec component uses normal thread engagement");
 eq(Calc.calculate({mode:"DIRECT",m1:1000,size:"1/2",e1:{fit:"End of pipe"},e2:{fit:"End of pipe"},items:[],components:[{type:"Strainer",brand:"Crane",overall:71}]}).cut,955,"inline component reduces total pipe cut");
-const missingComponent=Calc.calculate({mode:"DIRECT",m1:1000,size:"1/2",e1:{fit:"End of pipe"},e2:{fit:"End of pipe"},items:[],components:[{type:"IV",brand:"Crane",overall:""}]});
-assert.ok(missingComponent.note.includes("OVERALL LENGTH"),"component length required");
+const missingComponent=Calc.calculate({mode:"DIRECT",m1:1000,size:"1/2",e1:{fit:"End of pipe"},e2:{fit:"End of pipe"},items:[],components:[{type:"IV",brand:"TGL",overall:""}]});
+assert.ok(missingComponent.note.includes("OVERALL LENGTH"),"component length required for an unverified catalogue make");
 
 const f40=Calc.drainageFall({run:4000,mode:"40"});
 eq(f40.mmPerM,25,"1:40 fall per metre");
