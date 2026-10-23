@@ -12,22 +12,29 @@
   const FITTINGS=["","End of pipe","Face of fitting","Elbow","Bend","Equal tee","Tee","Coupling","Reducer"];
   const ACCESS=["","Front","Back","Middle"];
   const ITEM_TYPES=["","Union","Close taper nipple","Barrel nipple"];
-  const COMPONENT_TYPES=["","IV","DRV","DRV + CS","Strainer","NRV","Custom component"];
-  const COMPONENT_BRANDS=["Crane","Hattersley","TGL","Smith","Pegler","Brymec","Custom"];
+  const COMPONENT_TYPES=["","IV","DRV","DRV + CS","PRV","Strainer","NRV","Custom component"];
+  const COMPONENT_BRANDS=["Crane","Hattersley","TGL","Smith","Pegler","Brymec","Reliance","Custom"];
   const COMPONENT_CATALOGUE={
     "Crane":{
       "IV":{model:"D171",values:{"1/2":55,"3/4":64,"1":77,"1 1/4":91,"1 1/2":103,"2":122,"2 1/2":153}},
       "DRV":{model:"D921",values:{"1/2":87,"3/4":96,"1":100,"1 1/4":114,"1 1/2":125,"2":146}},
       "DRV + CS":{model:"D931 FODRV",values:{"1/2":87,"3/4":96,"1":100,"1 1/4":114,"1 1/2":125,"2":146}},
       "Strainer":{model:"D297",values:{"1/2":71,"3/4":86,"1":101,"1 1/4":134,"1 1/2":148,"2":176}},
-      "NRV":{model:"D140",values:{"1/2":58,"3/4":66,"1":80,"1 1/4":89,"1 1/2":95,"2":108,"2 1/2":153,"3":188}}
+      "NRV":{model:"D140",values:{"1/2":58,"3/4":66,"1":80,"1 1/4":89,"1 1/2":95,"2":108,"2 1/2":153,"3":188}},
+      "PRV":{model:"D1725",manualAssembly:true,connection:"male union",values:{"1/2":140,"3/4":160,"1":180,"1 1/4":200,"1 1/2":225,"2":252}}
     },
     "Hattersley":{
       "IV":{model:"Fig. 100",values:{"1/2":58.9,"3/4":66.9,"1":80.4,"1 1/4":94,"1 1/2":102,"2":124}},
       "DRV":{model:"Fig. 1432",values:{"1/2":87,"3/4":96,"1":100,"1 1/4":114,"1 1/2":125,"2":146}},
       "DRV + CS":{model:"Fig. 1732 FODRV",values:{"1/2":87,"3/4":96,"1":100,"1 1/4":114,"1 1/2":125,"2":146}},
       "Strainer":{model:"Fig. 807",values:{"1/2":71,"3/4":86,"1":101,"1 1/4":134,"1 1/2":148,"2":176}},
-      "NRV":{model:"Fig. 47",values:{"1/2":58,"3/4":66,"1":80,"1 1/4":89,"1 1/2":95,"2":108,"2 1/2":155,"3":190}}
+      "NRV":{model:"Fig. 47",values:{"1/2":58,"3/4":66,"1":80,"1 1/4":89,"1 1/2":95,"2":108,"2 1/2":155,"3":190}},
+      "PRV":{model:"Fig. 425",manualAssembly:true,connection:"male union",values:{"1/2":140,"3/4":160,"1":180,"1 1/4":200,"1 1/2":225,"2":255}}
+    },
+    "Reliance":{
+      // Reliance is selectable site-wide now. PRVs remain a manual fitted-assembly
+      // allowance because common commercial models use union/adaptor arrangements
+      // whose installed pipe deduction cannot be inferred safely from body length alone.
     }
   };
   const DRAIN_BRANDS=["Terrain"];
@@ -152,7 +159,7 @@
   function componentCatalogue(brand,type,size){
     const item=COMPONENT_CATALOGUE[brand]&&COMPONENT_CATALOGUE[brand][type];
     if(!item||!item.values||item.values[size]===undefined) return null;
-    return {brand,type,size,model:item.model,overall:item.values[size]};
+    return {brand,type,size,model:item.model,overall:item.values[size],manualAssembly:!!item.manualAssembly,connection:item.connection||""};
   }
 
   function componentAllowance(size,component){
@@ -163,6 +170,23 @@
     const manual=Number(component.overall);
     const hasManual=Number.isFinite(manual)&&manual>0;
     const cat=componentCatalogue(brand,component.type,size);
+
+    // PRVs commonly use male union tail-pieces. Their catalogue body length is useful
+    // as a reference, but it is not the same thing as the installed pipe deduction.
+    // For PRVs the entered value is therefore the fitted assembly allowance, measured
+    // from pipe end to pipe end with the actual unions/adaptors used on site.
+    if(component.type==="PRV"){
+      if(!hasManual) return {
+        state:"details",ded:0,note:"ENTER PRV FITTED ASSEMBLY LENGTH",
+        type:component.type,brand,model:cat?cat.model:"",
+        referenceOverall:cat?cat.overall:null,manualAssembly:true
+      };
+      return {
+        state:"ok",ded:manual,overall:manual,engagement:0,type:component.type,brand,
+        auto:false,model:cat?cat.model:"",referenceOverall:cat?cat.overall:null,manualAssembly:true
+      };
+    }
+
     const overall=hasManual?manual:(cat?cat.overall:NaN);
     if(!Number.isFinite(overall)||overall<=0) return {state:"details",ded:0,note:"ENTER COMPONENT OVERALL LENGTH"};
     const engagement=THREAD[size];
