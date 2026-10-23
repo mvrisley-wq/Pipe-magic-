@@ -21,7 +21,7 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
 .measure{margin-top:7px;background:#f8f8f8;border-radius:8px;padding:7px}.directBox{display:grid;grid-template-columns:1fr;gap:6px}.cxBox{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}.derived{min-height:39px;border-radius:7px;background:#e7eef8;display:flex;align-items:center;justify-content:center;font-weight:900}
 .ends{margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:7px}.end{border-radius:8px;padding:7px}.end.one{background:var(--blue)}.end.two{background:var(--orange)}.endTitle{font-size:11px;font-weight:900;margin-bottom:5px}
 .endGrid{display:grid;grid-template-columns:1fr;gap:5px}.teeFields{margin-top:5px;display:grid;grid-template-columns:1fr 1fr;gap:5px}.teeFields .wide{grid-column:1/-1}
-.items{margin-top:7px;border:1px solid var(--border);border-radius:8px;background:#fff}.items>summary{padding:8px;font-size:11px;font-weight:900;cursor:pointer}.itemsBody{padding:0 7px 7px}.itemRow{display:grid;grid-template-columns:1fr 125px;gap:6px;margin-top:6px;align-items:start}.itemRight{display:flex;flex-direction:column;gap:3px}.itemTake{min-height:39px;border:1px solid #bbb;border-radius:7px;background:#f3f7ed;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#315b22}.itemLen{min-height:39px}.siteBrandLabel{margin-left:auto;min-width:150px}.siteBrandLabel select{min-height:34px;font-size:14px}.componentRow{display:grid;grid-template-columns:1.05fr 1fr .75fr .8fr;gap:6px;margin-top:7px;align-items:end}.componentMeta{font-size:10px;font-weight:800;color:#555;min-height:18px}.componentTake{min-height:39px;border:1px solid #bbb;border-radius:7px;background:#eef4f8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#17365d}.componentCustomName{margin-top:5px}
+.items{margin-top:7px;border:1px solid var(--border);border-radius:8px;background:#fff}.items>summary{padding:8px;font-size:11px;font-weight:900;cursor:pointer}.itemsBody{padding:0 7px 7px}.itemRow{display:grid;grid-template-columns:1fr 125px;gap:6px;margin-top:6px;align-items:start}.itemRight{display:flex;flex-direction:column;gap:3px}.itemTake{min-height:39px;border:1px solid #bbb;border-radius:7px;background:#f3f7ed;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#315b22}.itemLen{min-height:39px}.siteBrandLabel{margin-left:auto;min-width:150px}.siteBrandLabel select{min-height:34px;font-size:14px}.brandQuick{display:flex;flex-wrap:wrap;gap:5px;padding:6px 7px;background:#fff;border-bottom:1px solid var(--border)}.brandQuick button{padding:7px 9px;font-size:12px;background:#eef1f4;color:#17365d;border:1px solid #c7c7c7}.brandQuick button.active{background:var(--navy);color:#fff;border-color:var(--navy)}.componentRow{display:grid;grid-template-columns:1.05fr 1fr .75fr .8fr;gap:6px;margin-top:7px;align-items:end}.componentMeta{font-size:10px;font-weight:800;color:#555;min-height:18px}.componentTake{min-height:39px;border:1px solid #bbb;border-radius:7px;background:#eef4f8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#17365d}.componentCustomName{margin-top:5px}
 .note{margin-top:7px;min-height:32px;border-radius:7px;background:var(--grey);font-size:11px;font-weight:800;padding:8px}.note.bad{background:var(--danger);color:#8a0000}.note.warn{background:var(--warn);color:#725600}
 .rowActions{display:flex;justify-content:flex-end;margin-top:7px}.clearRow{background:#555;color:#fff;padding:7px 10px;font-size:12px}
 .hint{font-size:10px;color:#666;margin-top:5px}.hidden{display:none}.footer{text-align:center;color:#666;font-size:10px;padding:10px 8px 18px}
@@ -45,7 +45,8 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
   </div>
 
   <section id="malleablePane">
-    <div class="toolbar"><button class="clearAll" id="clearAll">CLEAR ALL</button><span id="status" class="status">Ready</span><label class="siteBrandLabel">SITE VALVE BRAND<select id="defaultBrand"><option value="">Choose</option><option>Crane</option><option>Hattersley</option><option>TGL</option><option>Smith</option><option>Pegler</option><option>Custom</option></select></label></div>
+    <div class="toolbar"><button class="clearAll" id="clearAll">CLEAR ALL</button><span id="status" class="status">Ready</span><label class="siteBrandLabel">SITE VALVE BRAND<select id="defaultBrand"><option value="">Choose</option><option>Crane</option><option>Hattersley</option><option>TGL</option><option>Smith</option><option>Pegler</option><option>Brymec</option><option>Custom</option></select></label></div>
+    <div class="brandQuick" id="brandQuick" aria-label="Quick site valve brand"></div>
     <div id="rows" class="rows"></div>
     <div class="footer">GF is the standard malleable fitting make. Pipe Magic uses the normal thread engagement automatically. Valve/component make is separate and can be overridden per item.</div>
   </section>
@@ -346,8 +347,13 @@ function clearRow(row){
 rows.addEventListener('input',e=>{const row=e.target.closest('.pipe-row');if(row)calcRow(row)});
 rows.addEventListener('change',e=>{const row=e.target.closest('.pipe-row');if(row)calcRow(row)});
 const defaultBrand=document.getElementById('defaultBrand');
+const brandQuick=document.getElementById('brandQuick');
+brandQuick.innerHTML=COMPONENT_BRANDS.map(b=>'<button type="button" data-brand="'+esc(b)+'">'+esc(b)+'</button>').join('');
+function syncBrandQuick(){[...brandQuick.querySelectorAll('button')].forEach(b=>b.classList.toggle('active',b.dataset.brand===defaultBrand.value))}
 try{defaultBrand.value=localStorage.getItem('pipeMagicDefaultBrand')||''}catch(e){}
-defaultBrand.addEventListener('change',()=>{try{localStorage.setItem('pipeMagicDefaultBrand',defaultBrand.value)}catch(e){};[...document.querySelectorAll('#rows .pipe-row')].forEach(calcRow)});
+syncBrandQuick();
+defaultBrand.addEventListener('change',()=>{try{localStorage.setItem('pipeMagicDefaultBrand',defaultBrand.value)}catch(e){};syncBrandQuick();[...document.querySelectorAll('#rows .pipe-row')].forEach(calcRow)});
+brandQuick.addEventListener('click',e=>{const b=e.target.closest('button[data-brand]');if(!b)return;defaultBrand.value=b.dataset.brand;defaultBrand.dispatchEvent(new Event('change',{bubbles:true}))});
 rows.addEventListener('click',e=>{if(e.target.classList.contains('clearRow'))clearRow(e.target.closest('.pipe-row'))});
 document.getElementById('clearAll').onclick=()=>{if(!confirm('Clear ALL 50 rows?'))return;localStorage.removeItem('pipeMagic50');location.reload()};
 
