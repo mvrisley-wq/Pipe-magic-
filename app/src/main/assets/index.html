@@ -45,7 +45,7 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
   </div>
 
   <section id="malleablePane">
-    <div class="toolbar"><button class="clearAll" id="clearAll">CLEAR ALL</button><span id="status" class="status">Ready</span><label class="siteBrandLabel">SITE SPEC<select id="defaultBrand"><option value="">Choose</option><option>Crane</option><option>Hattersley</option><option>TGL</option><option>Smith</option><option>Pegler</option><option>Brymec</option><option>Custom</option></select></label></div>
+    <div class="toolbar"><button class="clearAll" id="clearAll">CLEAR ALL</button><span id="status" class="status">Ready</span><label class="siteBrandLabel">SITE SPEC<select id="defaultBrand"><option value="">Choose</option><option>Crane</option><option>Hattersley</option><option>TGL</option><option>Smith</option><option>Pegler</option><option>Brymec</option><option>Reliance</option><option>Custom</option></select></label></div>
     <div class="brandQuick" id="brandQuick" aria-label="Quick site valve brand"></div>
     <div id="rows" class="rows"></div>
     <div class="footer">GF is the standard malleable fitting make. Pipe Magic uses the normal thread engagement automatically. Set the site specification once, then override only the individual valves/components that differ on site.</div>
@@ -74,7 +74,7 @@ function rowHTML(n){
  '<div class="cxBox hidden"><label>C1-X<input class="cx1" type="number" inputmode="numeric" min="0" step="1"></label><label>C2-X<input class="cx2" type="number" inputmode="numeric" min="0" step="1"></label><label class="derivedField">C-C<div class="derived">—</div></label></div></div>'+
  '<div class="ends">'+endHTML(1)+endHTML(2)+'</div>'+
  '<details class="items"><summary>+ ADD-ONS — union / close / barrel</summary><div class="itemsBody">'+itemHTML(1)+itemHTML(2)+itemHTML(3)+'<div class="hint">Union and close taper work automatically. For a barrel nipple, pick its overall length.</div></div></details>'+
- '<details class="items components"><summary>+ VALVES / COMPONENTS — IV / DRV / CS / STRAINER / NRV</summary><div class="itemsBody">'+componentHTML(1)+componentHTML(2)+componentHTML(3)+'<div class="hint">Choose the site brand once. Override the make on any individual valve if needed. Catalogue length is automatic where verified. Leave Overall blank to use it; type a length only to override it manually.</div></div></details>'+
+ '<details class="items components"><summary>+ VALVES / COMPONENTS — IV / DRV / CS / PRV / STRAINER / NRV</summary><div class="itemsBody">'+componentHTML(1)+componentHTML(2)+componentHTML(3)+'<div class="hint">Choose the site brand once. Override the make on any individual valve if needed. Catalogue length is automatic where verified. Leave Overall blank to use it; type a length only to override it manually. PRV is different: enter the fitted assembly allowance because union/adaptor arrangements vary.</div></div></details>'+
  '<div class="note"></div><div class="rowActions"><button class="clearRow" type="button">CLR ROW</button></div>'+
  '</div></details>';
 }
@@ -85,7 +85,7 @@ function endHTML(n){
 function itemHTML(n){return '<div class="itemRow"><select class="itemType'+n+'">'+opts(ITEM_TYPES)+'</select><div class="itemRight"><select class="itemLen'+n+' hidden"><option value="">Length</option></select><div class="itemTake'+n+' itemTake">—</div></div></div>'}
 function componentHTML(n){
  const brands='<option value="SITE">Use site spec</option>'+COMPONENT_BRANDS.map(v=>opt(v,v)).join('');
- return '<div class="componentRow"><label>Type<select class="compType'+n+'">'+opts(COMPONENT_TYPES)+'</select></label><label>Make<select class="compBrand'+n+'">'+brands+'</select></label><label>Overall mm<input class="compOverall'+n+'" type="number" inputmode="decimal" min="0" step="0.1" placeholder="mm"></label><div><div class="componentMeta compMeta'+n+'"></div><div class="componentTake compTake'+n+'">—</div></div></div><label class="componentCustomName compNameWrap'+n+' hidden">Custom name<input class="compName'+n+'" type="text" placeholder="e.g. valve / strainer"></label>';
+ return '<div class="componentRow"><label>Type<select class="compType'+n+'">'+opts(COMPONENT_TYPES)+'</select></label><label>Make<select class="compBrand'+n+'">'+brands+'</select></label><label><span class="compLenLabel'+n+'">Overall mm</span><input class="compOverall'+n+'" type="number" inputmode="decimal" min="0" step="0.1" placeholder="mm"></label><div><div class="componentMeta compMeta'+n+'"></div><div class="componentTake compTake'+n+'">—</div></div></div><label class="componentCustomName compNameWrap'+n+' hidden">Custom name<input class="compName'+n+'" type="text" placeholder="e.g. valve / strainer"></label>';
 }
 const rows=document.getElementById('rows');rows.innerHTML=Array.from({length:50},(_,i)=>rowHTML(i+1)).join('');
 
@@ -313,9 +313,11 @@ function refreshComponent(row,n,size){
  const overallEl=row.querySelector('.compOverall'+n),overall=overallEl.value;
  const nameWrap=row.querySelector('.compNameWrap'+n);
  const meta=row.querySelector('.compMeta'+n),take=row.querySelector('.compTake'+n);
+ const lenLabel=row.querySelector('.compLenLabel'+n);
  nameWrap.classList.toggle('hidden',type!=='Custom component');
+ if(lenLabel)lenLabel.textContent=type==='PRV'?'Fitted assembly mm':'Overall mm';
  if(!type){meta.textContent='';take.textContent='—';overallEl.placeholder='mm';return}
- const directional=['DRV','DRV + CS','Strainer','NRV'].includes(type);
+ const directional=['DRV','DRV + CS','PRV','Strainer','NRV'].includes(type);
  const rawBrand=row.querySelector('.compBrand'+n).value;
  const siteBrand=document.getElementById('defaultBrand').value||'';
  const brand=resolvedComponentBrand(row,n);
@@ -329,14 +331,19 @@ function refreshComponent(row,n,size){
    brandText=siteBrand?('OVERRIDE '+siteBrand+' → '+(brand||'choose make')):(brand||'choose make');
    if(siteBrand && brand)meta.classList.add('override');
  }
- if(r.state==='ok'&&r.auto){
+ if(type==='PRV'){
+   overallEl.placeholder='fitted mm';
+   const ref=(r.referenceOverall!==null&&r.referenceOverall!==undefined)?(' • catalogue body '+fmtDrain(r.referenceOverall,1)+' mm'):'';
+   const model=r.model?(' • '+r.model):'';
+   meta.textContent=(directional?'IN → OUT • ':'')+brandText+model+ref+(r.state==='ok'?(' • fitted '+fmtDrain(r.overall,1)+' mm'):' • enter fitted assembly');
+ }else if(r.state==='ok'&&r.auto){
    overallEl.placeholder='AUTO '+fmtDrain(r.overall,1);
    meta.textContent=(directional?'IN → OUT • ':'')+brandText+' • '+r.model+' • '+fmtDrain(r.overall,1)+' mm AUTO';
  }else{
    overallEl.placeholder='mm';
    meta.textContent=(directional?'IN → OUT • ':'')+brandText+(r.state==='ok'?' • '+fmtDrain(r.overall,1)+' mm MANUAL':'');
  }
- take.textContent=r.state==='ok'?'−'+fmtDrain(r.ded,1)+' mm':(brand&&size?'enter length':'—');
+ take.textContent=r.state==='ok'?'−'+fmtDrain(r.ded,1)+' mm':(brand&&size?(type==='PRV'?'enter fitted':'enter length'):'—');
 }
 
 function calcRow(row){
