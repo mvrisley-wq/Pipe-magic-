@@ -21,7 +21,7 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
 .measure{margin-top:7px;background:#f8f8f8;border-radius:8px;padding:7px}.directBox{display:grid;grid-template-columns:1fr;gap:6px}.cxBox{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}.derived{min-height:39px;border-radius:7px;background:#e7eef8;display:flex;align-items:center;justify-content:center;font-weight:900}
 .ends{margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:7px}.end{border-radius:8px;padding:7px}.end.one{background:var(--blue)}.end.two{background:var(--orange)}.endTitle{font-size:11px;font-weight:900;margin-bottom:5px}
 .endGrid{display:grid;grid-template-columns:1fr;gap:5px}.teeFields{margin-top:5px;display:grid;grid-template-columns:1fr 1fr;gap:5px}.teeFields .wide{grid-column:1/-1}
-.items{margin-top:7px;border:1px solid var(--border);border-radius:8px;background:#fff}.items>summary{padding:8px;font-size:11px;font-weight:900;cursor:pointer}.itemsBody{padding:0 7px 7px}.itemRow{display:grid;grid-template-columns:1fr 125px;gap:6px;margin-top:6px;align-items:start}.itemRight{display:flex;flex-direction:column;gap:3px}.itemTake{min-height:39px;border:1px solid #bbb;border-radius:7px;background:#f3f7ed;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#315b22}.itemLen{min-height:39px}.siteBrandLabel{margin-left:auto;min-width:150px}.siteBrandLabel select{min-height:34px;font-size:14px}.brandQuick{display:flex;flex-wrap:wrap;gap:5px;padding:6px 7px;background:#fff;border-bottom:1px solid var(--border)}.brandQuick button{padding:7px 9px;font-size:12px;background:#eef1f4;color:#17365d;border:1px solid #c7c7c7}.brandQuick button.active{background:var(--navy);color:#fff;border-color:var(--navy)}.componentRow{display:grid;grid-template-columns:1.05fr 1fr .75fr .8fr;gap:6px;margin-top:7px;align-items:end}.componentMeta{font-size:10px;font-weight:800;color:#555;min-height:18px}.componentTake{min-height:39px;border:1px solid #bbb;border-radius:7px;background:#eef4f8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#17365d}.componentCustomName{margin-top:5px}
+.items{margin-top:7px;border:1px solid var(--border);border-radius:8px;background:#fff}.items>summary{padding:8px;font-size:11px;font-weight:900;cursor:pointer}.itemsBody{padding:0 7px 7px}.itemRow{display:grid;grid-template-columns:1fr 125px;gap:6px;margin-top:6px;align-items:start}.itemRight{display:flex;flex-direction:column;gap:3px}.itemTake{min-height:39px;border:1px solid #bbb;border-radius:7px;background:#f3f7ed;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#315b22}.itemLen{min-height:39px}.siteBrandLabel{margin-left:auto;min-width:150px}.siteBrandLabel select{min-height:34px;font-size:14px}.brandQuick{display:flex;flex-wrap:wrap;gap:5px;padding:6px 7px;background:#fff;border-bottom:1px solid var(--border)}.brandQuick button{padding:7px 9px;font-size:12px;background:#eef1f4;color:#17365d;border:1px solid #c7c7c7}.brandQuick button.active{background:var(--navy);color:#fff;border-color:var(--navy)}.componentRow{display:grid;grid-template-columns:1.05fr 1fr .75fr .8fr;gap:6px;margin-top:7px;align-items:end}.componentMeta{font-size:10px;font-weight:800;color:#555;min-height:18px}.componentMeta.override{color:#8a4b00}.componentMeta.siteSpec{color:#315b22}.componentTake{min-height:39px;border:1px solid #bbb;border-radius:7px;background:#eef4f8;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#17365d}.componentCustomName{margin-top:5px}
 .note{margin-top:7px;min-height:32px;border-radius:7px;background:var(--grey);font-size:11px;font-weight:800;padding:8px}.note.bad{background:var(--danger);color:#8a0000}.note.warn{background:var(--warn);color:#725600}
 .rowActions{display:flex;justify-content:flex-end;margin-top:7px}.clearRow{background:#555;color:#fff;padding:7px 10px;font-size:12px}
 .hint{font-size:10px;color:#666;margin-top:5px}.hidden{display:none}.footer{text-align:center;color:#666;font-size:10px;padding:10px 8px 18px}
@@ -45,10 +45,10 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
   </div>
 
   <section id="malleablePane">
-    <div class="toolbar"><button class="clearAll" id="clearAll">CLEAR ALL</button><span id="status" class="status">Ready</span><label class="siteBrandLabel">SITE VALVE BRAND<select id="defaultBrand"><option value="">Choose</option><option>Crane</option><option>Hattersley</option><option>TGL</option><option>Smith</option><option>Pegler</option><option>Brymec</option><option>Custom</option></select></label></div>
+    <div class="toolbar"><button class="clearAll" id="clearAll">CLEAR ALL</button><span id="status" class="status">Ready</span><label class="siteBrandLabel">SITE SPEC<select id="defaultBrand"><option value="">Choose</option><option>Crane</option><option>Hattersley</option><option>TGL</option><option>Smith</option><option>Pegler</option><option>Brymec</option><option>Custom</option></select></label></div>
     <div class="brandQuick" id="brandQuick" aria-label="Quick site valve brand"></div>
     <div id="rows" class="rows"></div>
-    <div class="footer">GF is the standard malleable fitting make. Pipe Magic uses the normal thread engagement automatically. Valve/component make is separate and can be overridden per item.</div>
+    <div class="footer">GF is the standard malleable fitting make. Pipe Magic uses the normal thread engagement automatically. Set the site specification once, then override only the individual valves/components that differ on site.</div>
   </section>
 
   <section id="drainagePane" class="hidden">
@@ -84,7 +84,7 @@ function endHTML(n){
 }
 function itemHTML(n){return '<div class="itemRow"><select class="itemType'+n+'">'+opts(ITEM_TYPES)+'</select><div class="itemRight"><select class="itemLen'+n+' hidden"><option value="">Length</option></select><div class="itemTake'+n+' itemTake">—</div></div></div>'}
 function componentHTML(n){
- const brands='<option value="SITE">Site default</option>'+COMPONENT_BRANDS.map(v=>opt(v,v)).join('');
+ const brands='<option value="SITE">Use site spec</option>'+COMPONENT_BRANDS.map(v=>opt(v,v)).join('');
  return '<div class="componentRow"><label>Type<select class="compType'+n+'">'+opts(COMPONENT_TYPES)+'</select></label><label>Make<select class="compBrand'+n+'">'+brands+'</select></label><label>Overall mm<input class="compOverall'+n+'" type="number" inputmode="decimal" min="0" step="0.1" placeholder="mm"></label><div><div class="componentMeta compMeta'+n+'"></div><div class="componentTake compTake'+n+'">—</div></div></div><label class="componentCustomName compNameWrap'+n+' hidden">Custom name<input class="compName'+n+'" type="text" placeholder="e.g. valve / strainer"></label>';
 }
 const rows=document.getElementById('rows');rows.innerHTML=Array.from({length:50},(_,i)=>rowHTML(i+1)).join('');
@@ -316,8 +316,17 @@ function refreshComponent(row,n,size){
  nameWrap.classList.toggle('hidden',type!=='Custom component');
  if(!type){meta.textContent='';take.textContent='—';return}
  const directional=['DRV','DRV + CS','Strainer','NRV'].includes(type);
+ const rawBrand=row.querySelector('.compBrand'+n).value;
+ const siteBrand=document.getElementById('defaultBrand').value||'';
  const brand=resolvedComponentBrand(row,n);
- meta.textContent=(directional?'IN → OUT • ':'')+(brand||'choose make');
+ meta.classList.remove('override','siteSpec');
+ if(rawBrand==='SITE'){
+   meta.textContent=(directional?'IN → OUT • ':'')+(siteBrand?('SITE SPEC • '+siteBrand):'choose site spec');
+   if(siteBrand)meta.classList.add('siteSpec');
+ }else{
+   meta.textContent=(directional?'IN → OUT • ':'')+(siteBrand?('OVERRIDE '+siteBrand+' → '+(brand||'choose make')):(brand||'choose make'));
+   if(siteBrand && brand)meta.classList.add('override');
+ }
  const r=componentAllowance(size,{type,brand,overall});
  take.textContent=r.state==='ok'?'−'+fmtDrain(r.ded,1)+' mm':'enter length';
 }
