@@ -28,7 +28,10 @@ const missing=Calc.calculate({mode:"DIRECT",m1:1000,size:"1",e1:{fit:"End of pip
 assert.ok(missing.note.includes("SELECT BARREL NIPPLE LENGTH"),"Missing barrel length warning");
 console.log("PASS: barrel length selection required");
 
+assert.ok(Calc.COMPONENT_BRANDS.includes("Brymec"),"Brymec is available as a valve/component brand");
+console.log("PASS: Brymec component brand available");
 eq(Calc.componentAllowance("1/2",{type:"Strainer",brand:"Crane",overall:71}).ded,45,"1/2 inline component uses two 13 mm engagements");
+eq(Calc.componentAllowance("1/2",{type:"IV",brand:"Brymec",overall:71}).ded,45,"Brymec component uses normal thread engagement");
 eq(Calc.calculate({mode:"DIRECT",m1:1000,size:"1/2",e1:{fit:"End of pipe"},e2:{fit:"End of pipe"},items:[],components:[{type:"Strainer",brand:"Crane",overall:71}]}).cut,955,"inline component reduces total pipe cut");
 const missingComponent=Calc.calculate({mode:"DIRECT",m1:1000,size:"1/2",e1:{fit:"End of pipe"},e2:{fit:"End of pipe"},items:[],components:[{type:"IV",brand:"Crane",overall:""}]});
 assert.ok(missingComponent.note.includes("OVERALL LENGTH"),"component length required");
