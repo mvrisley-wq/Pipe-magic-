@@ -13,7 +13,7 @@
   const ACCESS=["","Front","Back","Middle"];
   const ITEM_TYPES=["","Union","Close taper nipple","Barrel nipple"];
   const COMPONENT_TYPES=["","IV","DRV","DRV + CS","Strainer","NRV","Custom component"];
-  const COMPONENT_BRANDS=["Crane","Hattersley","TGL","Smith","Pegler","Custom"];
+  const COMPONENT_BRANDS=["Crane","Hattersley","TGL","Smith","Pegler","Brymec","Custom"];
   const DRAIN_BRANDS=["Terrain"];
   const DRAIN_SYSTEMS=["200 Solvent Waste","100 Solvent Soil"];
   const DRAIN_SIZE_BY_SYSTEM={
