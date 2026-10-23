@@ -30,8 +30,16 @@ console.log("PASS: barrel length selection required");
 
 assert.ok(Calc.COMPONENT_BRANDS.includes("Brymec"),"Brymec is available as a valve/component brand");
 console.log("PASS: Brymec component brand available");
-assert.ok(["Crane","Hattersley","TGL","Smith","Pegler","Brymec","Custom"].every(b=>Calc.COMPONENT_BRANDS.includes(b)),"all site/component brands available");
+assert.ok(["Crane","Hattersley","TGL","Smith","Pegler","Brymec","Reliance","Custom"].every(b=>Calc.COMPONENT_BRANDS.includes(b)),"all site/component brands available");
 console.log("PASS: all site/component brands available");
+assert.ok(Calc.COMPONENT_TYPES.includes("PRV"),"PRV is available as a component type");
+console.log("PASS: PRV component type available");
+eq(Calc.componentCatalogue("Crane","PRV","1/2").overall,140,"Crane D1725 PRV catalogue body reference");
+eq(Calc.componentCatalogue("Hattersley","PRV","2").overall,255,"Hattersley Fig 425 PRV catalogue body reference");
+const prvMissing=Calc.componentAllowance("1",{type:"PRV",brand:"Crane",overall:""});
+assert.ok(prvMissing.note.includes("FITTED ASSEMBLY"),"PRV requires fitted assembly allowance");
+eq(Calc.componentAllowance("1",{type:"PRV",brand:"Reliance",overall:185}).ded,185,"Reliance PRV uses entered fitted assembly allowance without false thread deduction");
+
 eq(Calc.componentCatalogue("Crane","IV","1/2").overall,55,"Crane D171 1/2 catalogue length");
 eq(Calc.componentCatalogue("Crane","DRV","2").overall,146,"Crane D921 2in catalogue length");
 eq(Calc.componentCatalogue("Crane","Strainer","2").overall,176,"Crane D297 2in catalogue length");
