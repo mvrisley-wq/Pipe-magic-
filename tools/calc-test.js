@@ -36,6 +36,14 @@ eq(Calc.componentCatalogue("Crane","IV","1/2").overall,55,"Crane D171 1/2 catalo
 eq(Calc.componentCatalogue("Crane","DRV","2").overall,146,"Crane D921 2in catalogue length");
 eq(Calc.componentCatalogue("Crane","Strainer","2").overall,176,"Crane D297 2in catalogue length");
 eq(Calc.componentCatalogue("Crane","NRV","1").overall,80,"Crane D140 1in catalogue length");
+eq(Calc.componentCatalogue("Crane","DRV + CS","2").overall,146,"Crane D931 DRV + CS catalogue length");
+eq(Calc.componentCatalogue("Hattersley","IV","1/2").overall,58.9,"Hattersley Fig 100 half-inch catalogue length");
+eq(Calc.componentCatalogue("Hattersley","DRV","2").overall,146,"Hattersley Fig 1432 2in catalogue length");
+eq(Calc.componentCatalogue("Hattersley","DRV + CS","1").overall,100,"Hattersley Fig 1732 DRV + CS catalogue length");
+eq(Calc.componentCatalogue("Hattersley","Strainer","2").overall,176,"Hattersley Fig 807 2in catalogue length");
+eq(Calc.componentCatalogue("Hattersley","NRV","3").overall,190,"Hattersley Fig 47 3in catalogue length");
+eq(Calc.componentAllowance("1/2",{type:"IV",brand:"Hattersley",overall:""}).ded,32.900000000000006,"Hattersley IV automatic catalogue deduction");
+
 eq(Calc.componentAllowance("1/2",{type:"IV",brand:"Crane",overall:""}).ded,29,"Crane D171 auto catalogue deduction");
 eq(Calc.calculate({mode:"DIRECT",m1:1000,size:"1/2",e1:{fit:"End of pipe"},e2:{fit:"End of pipe"},items:[],components:[{type:"Strainer",brand:"Crane",overall:""}]}).cut,955,"Crane strainer auto catalogue cut");
 eq(Calc.componentAllowance("1/2",{type:"Strainer",brand:"Crane",overall:71}).ded,45,"1/2 inline component uses two 13 mm engagements");
