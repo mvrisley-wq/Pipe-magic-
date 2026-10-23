@@ -74,7 +74,7 @@ function rowHTML(n){
  '<div class="cxBox hidden"><label>C1-X<input class="cx1" type="number" inputmode="numeric" min="0" step="1"></label><label>C2-X<input class="cx2" type="number" inputmode="numeric" min="0" step="1"></label><label class="derivedField">C-C<div class="derived">—</div></label></div></div>'+
  '<div class="ends">'+endHTML(1)+endHTML(2)+'</div>'+
  '<details class="items"><summary>+ ADD-ONS — union / close / barrel</summary><div class="itemsBody">'+itemHTML(1)+itemHTML(2)+itemHTML(3)+'<div class="hint">Union and close taper work automatically. For a barrel nipple, pick its overall length.</div></div></details>'+
- '<details class="items components"><summary>+ VALVES / COMPONENTS — IV / DRV / CS / STRAINER / NRV</summary><div class="itemsBody">'+componentHTML(1)+componentHTML(2)+componentHTML(3)+'<div class="hint">Choose the site brand once. Override the make on any individual valve if needed. Enter overall end-to-end length; Pipe Magic allows for thread engagement automatically.</div></div></details>'+
+ '<details class="items components"><summary>+ VALVES / COMPONENTS — IV / DRV / CS / STRAINER / NRV</summary><div class="itemsBody">'+componentHTML(1)+componentHTML(2)+componentHTML(3)+'<div class="hint">Choose the site brand once. Override the make on any individual valve if needed. Catalogue length is automatic where verified. Leave Overall blank to use it; type a length only to override it manually.</div></div></details>'+
  '<div class="note"></div><div class="rowActions"><button class="clearRow" type="button">CLR ROW</button></div>'+
  '</div></details>';
 }
@@ -310,25 +310,33 @@ function refreshItem(row,n,size){
 
 function refreshComponent(row,n,size){
  const type=row.querySelector('.compType'+n).value;
- const overall=row.querySelector('.compOverall'+n).value;
+ const overallEl=row.querySelector('.compOverall'+n),overall=overallEl.value;
  const nameWrap=row.querySelector('.compNameWrap'+n);
  const meta=row.querySelector('.compMeta'+n),take=row.querySelector('.compTake'+n);
  nameWrap.classList.toggle('hidden',type!=='Custom component');
- if(!type){meta.textContent='';take.textContent='—';return}
+ if(!type){meta.textContent='';take.textContent='—';overallEl.placeholder='mm';return}
  const directional=['DRV','DRV + CS','Strainer','NRV'].includes(type);
  const rawBrand=row.querySelector('.compBrand'+n).value;
  const siteBrand=document.getElementById('defaultBrand').value||'';
  const brand=resolvedComponentBrand(row,n);
+ const r=componentAllowance(size,{type,brand,overall});
  meta.classList.remove('override','siteSpec');
+ let brandText='';
  if(rawBrand==='SITE'){
-   meta.textContent=(directional?'IN → OUT • ':'')+(siteBrand?('SITE SPEC • '+siteBrand):'choose site spec');
+   brandText=siteBrand?('SITE SPEC • '+siteBrand):'choose site spec';
    if(siteBrand)meta.classList.add('siteSpec');
  }else{
-   meta.textContent=(directional?'IN → OUT • ':'')+(siteBrand?('OVERRIDE '+siteBrand+' → '+(brand||'choose make')):(brand||'choose make'));
+   brandText=siteBrand?('OVERRIDE '+siteBrand+' → '+(brand||'choose make')):(brand||'choose make');
    if(siteBrand && brand)meta.classList.add('override');
  }
- const r=componentAllowance(size,{type,brand,overall});
- take.textContent=r.state==='ok'?'−'+fmtDrain(r.ded,1)+' mm':'enter length';
+ if(r.state==='ok'&&r.auto){
+   overallEl.placeholder='AUTO '+fmtDrain(r.overall,1);
+   meta.textContent=(directional?'IN → OUT • ':'')+brandText+' • '+r.model+' • '+fmtDrain(r.overall,1)+' mm AUTO';
+ }else{
+   overallEl.placeholder='mm';
+   meta.textContent=(directional?'IN → OUT • ':'')+brandText+(r.state==='ok'?' • '+fmtDrain(r.overall,1)+' mm MANUAL':'');
+ }
+ take.textContent=r.state==='ok'?'−'+fmtDrain(r.ded,1)+' mm':(brand&&size?'enter length':'—');
 }
 
 function calcRow(row){
