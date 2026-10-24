@@ -33,9 +33,41 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
 .resultBox{background:#eef4f8;border:1px solid #cad5df;border-radius:8px;padding:9px}.resultName{font-size:10px;font-weight:800;color:#666}.resultVal{font-size:20px;font-weight:900;margin-top:3px;color:#17365d}
 .drainNote{margin-top:8px;background:#f7f7f7;border-radius:7px;padding:8px;font-size:11px;font-weight:800}.drainActions{margin-top:8px;display:flex;justify-content:flex-end}.clearDrain{background:#555;color:#fff}.drainFallGrid{margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:7px}.drainEnds{margin-top:7px;display:grid;grid-template-columns:1fr 1fr;gap:7px}.drainEnd{border-radius:8px;padding:7px}.drainEnd.one{background:var(--blue)}.drainEnd.two{background:var(--orange)}.drainEndGrid{display:grid;grid-template-columns:1fr;gap:5px}.autoTake{min-height:34px;border-radius:7px;background:#fff;padding:8px;font-size:12px;font-weight:800;color:#315b22}.autoTake strong{font-size:15px}.drainBrand{min-height:39px;border:1px solid #aaa;border-radius:7px;background:#f7f7f7;padding:9px;font-size:15px;font-weight:900;color:#17365d}.drainMetrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:7px}.drainMini{background:#eef4f8;border:1px solid #cad5df;border-radius:7px;padding:7px;text-align:center}.drainMini .n{font-size:9px;font-weight:800;color:#666}.drainMini .v{font-size:14px;font-weight:900;color:#17365d;margin-top:2px}
 @media(max-width:420px){.componentRow{grid-template-columns:1fr 1fr}.siteBrandLabel{min-width:130px}.title{font-size:18px}.rows{padding:5px}.body{padding:7px}.top{grid-template-columns:1fr 1fr}.top .cutField{grid-column:1/-1}.cxBox{grid-template-columns:1fr 1fr}.cxBox .derivedField{grid-column:1/-1}.ends{grid-template-columns:1fr}.pipe-row>summary{grid-template-columns:36px 1fr 1.1fr}.drainGrid{grid-template-columns:1fr 1fr}.drainGrid .runField{grid-column:1/-1}.drainResults{grid-template-columns:1fr 1fr}.resultVal{font-size:18px}.drainEnds{grid-template-columns:1fr}.drainMetrics{grid-template-columns:1fr 1fr}}
+
+.splash{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 35%,#244f82 0,#17365d 42%,#0b1d34 100%);color:#fff;overflow:hidden;transition:opacity .45s ease,visibility .45s ease}
+.splash.hide{opacity:0;visibility:hidden;pointer-events:none}
+.splashInner{text-align:center;transform:translateY(-2vh)}
+.pipeLogo{width:min(54vw,230px);height:auto;filter:drop-shadow(0 12px 22px rgba(0,0,0,.35))}
+.pipeStroke{fill:none;stroke:#d8ecff;stroke-width:12;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:560;stroke-dashoffset:560;animation:drawPipe 1.15s cubic-bezier(.65,0,.35,1) forwards}
+.pipeHighlight{fill:none;stroke:#69c8ff;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:560;stroke-dashoffset:560;animation:drawPipe 1.15s .08s cubic-bezier(.65,0,.35,1) forwards}
+.spark{opacity:0;transform-origin:157px 70px;animation:sparkFlash .55s 1.05s ease-out forwards}
+.splashTitle{font-size:clamp(30px,8vw,48px);font-weight:1000;letter-spacing:.08em;margin-top:12px;opacity:0;transform:translateY(10px);animation:titleIn .42s 1.12s ease-out forwards;text-shadow:0 3px 12px rgba(0,0,0,.35)}
+.splashTag{margin-top:8px;font-size:11px;font-weight:800;letter-spacing:.18em;color:#bcd9f7;opacity:0;animation:titleIn .4s 1.36s ease-out forwards}
+@keyframes drawPipe{to{stroke-dashoffset:0}}
+@keyframes sparkFlash{0%{opacity:0;transform:scale(.3) rotate(0)}45%{opacity:1;transform:scale(1.2) rotate(35deg)}100%{opacity:.9;transform:scale(.9) rotate(65deg)}}
+@keyframes titleIn{to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.pipeStroke,.pipeHighlight,.spark,.splashTitle,.splashTag{animation:none;stroke-dashoffset:0;opacity:1;transform:none}}
+
 </style>
 </head>
 <body>
+
+<div id="splash" class="splash" aria-label="Pipe Magic loading">
+  <div class="splashInner">
+    <svg class="pipeLogo" viewBox="0 0 240 150" role="img" aria-label="Pipe Magic PM pipe logo">
+      <path class="pipeStroke" d="M42 118 V34 H95 Q124 34 124 62 Q124 88 95 88 H42 M145 118 V55 L176 88 L207 55 V118"/>
+      <path class="pipeHighlight" d="M42 118 V34 H95 Q124 34 124 62 Q124 88 95 88 H42 M145 118 V55 L176 88 L207 55 V118"/>
+      <g class="spark">
+        <path d="M157 47 L161 58 L172 62 L161 66 L157 77 L153 66 L142 62 L153 58 Z" fill="#fff"/>
+        <circle cx="177" cy="45" r="3.5" fill="#69c8ff"/>
+        <circle cx="139" cy="42" r="2.7" fill="#69c8ff"/>
+      </g>
+    </svg>
+    <div class="splashTitle">PIPE MAGIC</div>
+    <div class="splashTag">MEASURE • SELECT • CUT</div>
+  </div>
+</div>
+
 <div class="app">
   <div class="title">PIPE MAGIC</div>
   <div class="sub">GF MALLEABLE PIPE CUTS + TERRAIN DRAINAGE</div>
@@ -59,6 +91,14 @@ input,select{width:100%;min-height:39px;border:1px solid #aaa;border-radius:7px;
 </div>
 <script src="calc.js"></script>
 <script>
+
+const splash=document.getElementById('splash');
+if(splash){
+  const closeSplash=()=>splash.classList.add('hide');
+  setTimeout(closeSplash,1900);
+  splash.addEventListener('click',closeSplash,{once:true});
+}
+
 const {SIZES,FITTINGS,ACCESS,ITEM_TYPES,COMPONENT_TYPES,COMPONENT_BRANDS,BARREL_LENGTHS,DRAIN_BRANDS,DRAIN_SYSTEMS,DRAIN_SIZE_BY_SYSTEM,itemAllowance,componentAllowance,calculate,drainFittings,drainLegs,drainageFall,drainageCut,drainageAutoCut}=PipeMagic;
 const esc=s=>String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 const opt=(v,t)=>'<option value="'+esc(v)+'">'+esc(t==null?v:t)+'</option>';
